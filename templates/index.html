@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="http://lib.sinaapp.com/js/jquery/1.9.1/jquery-1.9.1.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<div><input type="text" id="url">
+    <button id="btn_send">send</button>
+    <div id="text">主题：</div>
+    <div id="keywords">关键词：</div>
+</div>
+</body>
+<script>
+    $("#btn_send").click(function () {
+        alert($("#url").val())
+        $.post('http://0.0.0.0:3333/predict_boson_url', {url: $("#url").val()}, function (data, status) {
+            console.log(data);
+            var jdata = jQuery.parseJSON(data)
+            $('#text').html('<p>主题:' + jdata.class+'</p>')
+            var topk = '关键词：\n';
+            for (var i =0;i<jdata.keyword.length;i++){
+                topk+='<p>'+i+':\t'+jdata.keyword[i][1]+'\t'+jdata.keyword[i][0]+'\n'+'</p>';
+            }
+            $("#keywords").html(topk)
+        })
+    })
+
+</script>
+{# '{"content":"' + $("#url").val() + '}',#}
+</html>

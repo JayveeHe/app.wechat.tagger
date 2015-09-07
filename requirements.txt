@@ -1,0 +1,14 @@
+leancloud-sdk
+Flask>=0.10.1
+ndg-httpsclient
+pyasn1
+logentries
+nose
+requests
+jieba
+numpy>1.6.2
+scipy
+scikit-learn
+gensim
+beautifulsoup4
+flask-cors
