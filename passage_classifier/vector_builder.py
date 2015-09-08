@@ -225,6 +225,7 @@ def generate_all_trainset():
     return all_x, all_y
 
 
+
 if __name__ == '__main__':
     vb = VectorBuilder()
     # print vb.build_single_vec('腾讯喜欢投资球队')

@@ -6,11 +6,17 @@
     <title></title>
 </head>
 <body>
-<div><input type="text" id="url">
+<div>URL:<input type="text" id="url">
     <button id="btn_send">send</button>
-    <div id="text">主题：</div>
-    <div id="keywords">关键词：</div>
-</div>
+    <div>
+        <div id="text">主题：</div>
+        <div id="keywords">关键词：</div>
+        <p>
+            ====================================
+        </p>
+        <div id="jieba_keywords"style="float: left;">jieba关键词：</div>
+        <div id="jieba_textrank" style="position:relative">jieba－textrank：</div>
+    </div>
 </body>
 <script>
     $("#btn_send").click(function () {
@@ -18,12 +24,22 @@
         $.post('http://0.0.0.0:3333/predict_boson_url', {url: $("#url").val()}, function (data, status) {
             console.log(data);
             var jdata = jQuery.parseJSON(data)
-            $('#text').html('<p>主题:' + jdata.class+'</p>')
+            $('#text').html('<p>主题:' + jdata.class + '</p>')
             var topk = '关键词：\n';
-            for (var i =0;i<jdata.keyword.length;i++){
-                topk+='<p>'+i+':\t'+jdata.keyword[i][1]+'\t'+jdata.keyword[i][0]+'\n'+'</p>';
+            for (var i = 0; i < jdata.keyword.length; i++) {
+                topk += '<p>' + i + ':\t' + jdata.keyword[i][1] + '\t' + jdata.keyword[i][0] + '\n' + '</p>';
             }
             $("#keywords").html(topk)
+            var jieba_keywords = 'jieba关键词：\n';
+            for (var i = 0; i < jdata.jieba_keywords.length; i++) {
+                jieba_keywords += '<p>' + i + ':\t' + jdata.jieba_keywords[i] + '\n' + '</p>';
+            }
+            $("#jieba_keywords").html(jieba_keywords)
+            var jieba_textrank = 'jieba-textrank：\n';
+            for (var i = 0; i < jdata.jieba_textrank.length; i++) {
+                jieba_textrank += '<p>' + i + ':\t' + jdata.jieba_textrank[i] + '\n' + '</p>';
+            }
+            $("#jieba_textrank").html(jieba_textrank)
         })
     })
 
