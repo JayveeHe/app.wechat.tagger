@@ -20,7 +20,8 @@ project_path = os.path.dirname(__file__)
 sys.path.append(project_path)
 app = Flask(__name__)
 vb = VectorBuilder()
-nbclf = joblib.load('%s/data/models/nbclf.model' % project_path)
+nbclf = joblib.load('%s/data/models/nbclf.model' % project_path)    #for mac pycharm
+# nbclf = joblib.load('./data/models/nbclf.model') # for linux os
 
 
 # logger = logging.getLogger('logentries')
@@ -131,4 +132,4 @@ def classify_passage_boson_url():
 
 
 if __name__ == '__main__':
-    app.run(port=3333, debug=True)
+    app.run(host='0.0.0.0',port=3333, debug=True)
