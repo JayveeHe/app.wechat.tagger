@@ -56,8 +56,8 @@ def get_corpus_by_lists(word_lists):
 
 
 if __name__ == '__main__':
-    # raw_corpus = get_corpus_by_lists(travel_all_files('/Users/jayvee//Downloads/SogouC.reduced/Reduced'))
-    raw_corpus = get_corpus_by_lists(travel_all_files('/Users/jayvee//Desktop/data'))
+    raw_corpus = get_corpus_by_lists(travel_all_files('/Users/jayvee//Downloads/SogouC.reduced/Reduced'))
+    # raw_corpus = get_corpus_by_lists(travel_all_files('/Users/jayvee//Desktop/data'))
     dic = raw_corpus[0]
     corpus = raw_corpus[1]
     tfidf = models.TfidfModel(corpus)

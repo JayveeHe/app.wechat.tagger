@@ -214,27 +214,79 @@ def generate_trainset(raw_train_text_root, label_index):
     return (x_result, y_result)
 
 
-def generate_all_trainset():
+def generate_all_trainset(rootpath='/Users/jayvee/Desktop/data'):
     all_x = []
     all_y = []
     for i in xrange(1, 11):
         print 'label = %s' % i
-        i_result_tuple = generate_trainset(r'D:\CS\TrainSet\SogouC_Reduced\%s' % i, i)
+        i_result_tuple = generate_trainset('%s/%s/' % (rootpath,i), i)
         all_x.extend(i_result_tuple[0])
         all_y.extend(i_result_tuple[1])
     return all_x, all_y
 
 
+def generate_class_ave_vec(class_root_path):
+    """
+    为文章分类百分比服务，计算每一类的中心向量
+    :param class_root_path:
+    :return:
+    """
+    walk = os.walk(class_root_path)
+    vecbuilder = VectorBuilder()
+    class_vec = vecbuilder.build_single_vec('')
+    filecount = 0
+    for root, dirs, files in walk:
+        for name in files:
+            print name
+            try:
+                f = codecs.open(os.path.join(root, name), 'r', encoding='gbk')
+                raw = f.read()
+                x_vec = vecbuilder.build_single_vec(raw)
+                for i_coord in xrange(len(class_vec)):
+                    class_vec[i_coord] += x_vec[i_coord]
+                filecount += 1
+            except Exception, e:
+                print 'error file name = %s' % name
+                continue
+    # average
+    for vec_coord in class_vec:
+        vec_coord /= filecount
+    return class_vec
+
+
+def generate_all_class_ave_vec(root_path):
+    flist = os.listdir(root_path)
+    for dir_path in flist:
+        if os.path.isdir(root_path + dir_path):
+            print dir_path
+            class_vec = generate_class_ave_vec(root_path + dir_path + '/')
+            fout = open('../data/ave_vec_%s.txt' % dir_path, 'w')
+            for i in class_vec:
+                fout.write('%f\t' % i)
+    print 'done'
+
+
 
 if __name__ == '__main__':
-    vb = VectorBuilder()
+    # get class ave center point
+
+    # cv = generate_class_ave_vec('/Users/jayvee/Downloads/SogouC.reduced/Reduced/C000008/')
+    # fout = open('../data/ave_vec_8.txt', 'w')
+    # for i in cv:
+    #     fout.write('%f\t' % i)
+    #
+    # print 'done'
+
+    generate_all_class_ave_vec('/Users/jayvee/Downloads/SogouC.reduced/Reduced/')
+
+    # vb = VectorBuilder()
     # print vb.build_single_vec('腾讯喜欢投资球队')
 
     # result_tuple = generate_trainset(r'D:\CS\TrainSet\SogouC_Reduced\2', 2)
 
     # result = generate_all_trainset()
 
-    vb.build_base_vec(r'D:\CS\TrainSet\SogouC_Reduced', '../data/all_vec_500.txt')
+    # vb.build_base_vec(r'D:\CS\TrainSet\SogouC_Reduced', '../data/all_vec_500.txt')
 
     # for x in result_tuple[0]:
     #     for i in x:

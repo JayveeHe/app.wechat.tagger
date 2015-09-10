@@ -23,7 +23,8 @@ def get_topics(text, topic_num=10):
 
 
 def get_topic_by_model(text):
-    lda = models.LdaModel.load('/Users/jayvee/github_project/jobs/senz.analyzer.texttag/data/lda_models/reduced.model')
+    lda = models.LdaModel.load(
+        '/Users/jayvee/github_project/jobs/senz.analyzer.texttag/data/lda_models/20topics_reduced.model')
     word_list = []
     words = pseg.cut(text)
     for item in words:
@@ -39,8 +40,9 @@ def get_topic_by_model(text):
         count += 1
     print doc_lda
     for i in lda[corpus]:
+        topic_list = []
         for k in i:
-            print lda.print_topic(k[0]),k[1]
+            print lda.print_topic(k[0],7), k[1]
 
 
 if __name__ == '__main__':
