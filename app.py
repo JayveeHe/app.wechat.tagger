@@ -122,8 +122,8 @@ def classify_passage_boson_url():
                   11: u'女人', 12: u'汽车', 13: u'游戏'}
     print classify_result
     classify_result = int(re.compile('\d+').findall(classify_result)[0])
-    jieba_textrank = jieba.analyse.textrank(content,)
-    jieba_keywords = jieba.analyse.extract_tags(content,allowPOS=['n','vn','ns','v'])
+    jieba_textrank = jieba.analyse.textrank(content,topK=15)
+    jieba_keywords = jieba.analyse.extract_tags(content,allowPOS=['n','vn','ns','v'],topK=15)
     resp = make_response(
         json.dumps({'code': 0, 'class': class_dict[classify_result], 'keyword': keyword_result,
                     'jieba_textrank': jieba_textrank, 'jieba_keywords': jieba_keywords}, ensure_ascii=False),
