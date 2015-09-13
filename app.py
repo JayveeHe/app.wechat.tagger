@@ -2,16 +2,17 @@
 import json
 import os
 import re
+import sys
 
 from flask import Flask, request, make_response, render_template
 from flask.ext.cors import cross_origin
 import requests
-import sys
 import jieba.analyse
 import numpy as np
 from sklearn.externals import joblib
+
 from passage_classifier.vector_builder import VectorBuilder
-from passage_classifier.web_content_extractor import get_content
+from wechat_analyzer.web_content_extractor import get_content
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -96,7 +97,7 @@ def classify_passage_boson():
     class_dict = {0: u'体育', 1: u'教育', 2: u'财经', 3: u'社会',
                   4: u'娱乐', 5: u'军事', 6: u'国内',
                   7: u'科技', 8: '互联网', 9: u'房产', 10: u'国际',
-                  11: u'女人', 12: u'汽车', 13: u'游戏'}
+                  11: u'健康', 12: u'汽车', 13: u'游戏'}
     classify_result = int(re.compile('\d+').findall(classify_result)[0])
     jieba_textrank = jieba.analyse.textrank(content,)
     jieba_keywords = jieba.analyse.extract_tags(content,allowPOS=['n','vn','ns','v'])

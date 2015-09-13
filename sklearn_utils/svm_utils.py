@@ -55,6 +55,7 @@ def grid_search_params(clf, train_x, train_y,param_grid):
     gs.fit(train_x, train_y)
     report(gs.grid_scores_)
 
+
 # Utility function to report best scores
 def report(grid_scores, n_top=3):
     top_scores = sorted(grid_scores, key=itemgetter(1), reverse=True)[:n_top]
