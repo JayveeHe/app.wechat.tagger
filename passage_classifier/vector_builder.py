@@ -68,6 +68,9 @@ class VectorBuilder:
         return tfidf
 
     def get_class_top_tfidf(self, class_path):
+        """
+        获取每一类的前k大的tfidf词
+        """
         stoplist = []
         for line in open('../data/WordFilter.dic', 'r'):
             stoplist.append(line.strip())
@@ -124,6 +127,9 @@ class VectorBuilder:
         return result_list
 
     def build_single_vec(self, text):
+        """
+        把一个text转化为tfidf向量
+        """
         from copy import deepcopy
 
         temp_vec = deepcopy(self.base_vec)
@@ -295,7 +301,7 @@ if __name__ == '__main__':
     # print result_tuple
     pass
     # build_base_tfidf_vec('D:\CS\Java\SogouC.reduced.20061127\SogouC.reduced\Reduced')
-    # dic = corpora.Dictionary.load_from_text('D:\CS\Git\Jobs\senz.analyzer.texttag\gensim_utils\lda_dic')
+    # dic = corpora.Dictionary.load_from_text('D:\CS\Git\Jobs\app.wechat.tagger\gensim_utils\lda_dic')
     # corpus = corpora
     # print dic.num_docs
     # dic.doc2bow()
