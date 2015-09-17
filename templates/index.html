@@ -31,6 +31,9 @@
     <div class="col-md-4" id="jieba_keywords" style="text-align: center">jieba关键词：</div>
     <div class="col-md-4" id="jieba_textrank" style="text-align: center">jieba－textrank：</div>
 </div>
+<div class="row">
+    <div class="col-md-12" id="topics">类内话题：</div>
+</div>
 
 
 </body>
@@ -39,23 +42,28 @@
         alert($("#url").val())
         $.post('/predict_boson_url', {url: $("#url").val()}, function (data, status) {
             console.log(data);
-            var jdata = jQuery.parseJSON(data)
-            $('#text').html('<p>主题:' + jdata.class + '</p>')
+            var jdata = jQuery.parseJSON(data);
+            $('#text').html('<p>主题:' + jdata.class + '</p>');
             var topk = '关键词：\n';
             for (var i = 0; i < jdata.keyword.length; i++) {
                 topk += '<p>' + i + ':\t' + jdata.keyword[i][1] + '\t' + jdata.keyword[i][0] + '\n' + '</p>';
             }
-            $("#keywords").html(topk)
+            $("#keywords").html(topk);
             var jieba_keywords = 'jieba关键词：\n';
             for (var i = 0; i < jdata.jieba_keywords.length; i++) {
                 jieba_keywords += '<p>' + i + ':\t' + jdata.jieba_keywords[i] + '\n' + '</p>';
             }
-            $("#jieba_keywords").html(jieba_keywords)
+            $("#jieba_keywords").html(jieba_keywords);
             var jieba_textrank = 'jieba-textrank：\n';
             for (var i = 0; i < jdata.jieba_textrank.length; i++) {
                 jieba_textrank += '<p>' + i + ':\t' + jdata.jieba_textrank[i] + '\n' + '</p>';
             }
-            $("#jieba_textrank").html(jieba_textrank)
+            $("#jieba_textrank").html(jieba_textrank);
+            var topics = '话题：\n';
+            for (var i = 0; i < jdata.topic_list.length; i++) {
+                topics += '<p>' + '概率：' + jdata.topic_list[i].topic_prob + ';\t' + '话题代表词：' + jdata.topic_list[i].topic_content + '<p>'
+            }
+            $("#topics").html(topics);
         })
     })
 

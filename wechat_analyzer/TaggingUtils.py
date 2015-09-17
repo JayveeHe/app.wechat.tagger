@@ -12,6 +12,8 @@ __author__ = 'jayvee'
 apath = os.path.dirname(__file__)
 sys.path.append(apath)
 
+
+
 def passage_first_level_classify(content):
     """
     given a passage content, return its first level class
@@ -41,7 +43,7 @@ def passage_second_level_classify(content):
     """
     first_class = passage_first_level_classify(content)
     print first_class
-    lda_model = gensim.models.LdaModel.load('./wechat_data/lda_in_classify/%s.model' % first_class)
+    lda_model = gensim.models.LdaModel.load('%s/wechat_data/lda_in_classify/%s.model' % (apath,first_class))
     word_list = []
     words = pseg.cut(content)
     for item in words:
@@ -50,7 +52,7 @@ def passage_second_level_classify(content):
     train_set = [word_list]
     dic = gensim.corpora.Dictionary(train_set)
     corpus = [dic.doc2bow(text) for text in train_set]
-    # doc_lda = lda_model.get_document_topics(corpus)
+    doc_lda = lda_model.get_document_topics(corpus)
     count = 0
     # for j in lda_model.print_topics(20):
     #     print count, j
@@ -60,5 +62,7 @@ def passage_second_level_classify(content):
     for i in lda_model[corpus]:
         for k in i:
             print lda_model.print_topic(k[0], 7), k[1]
-            topic_list.append({'topic_content': lda_model.print_topic(k[0], 7), 'topick_prob': k[1]})
+            topic_list.append(
+                {'topic_tag': '%s-%s' % (first_class, k[0]), 'topic_content': lda_model.print_topic(k[0], 7),
+                 'topic_prob': k[1]})
     return topic_list

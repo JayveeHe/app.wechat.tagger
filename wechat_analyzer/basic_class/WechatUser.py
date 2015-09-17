@@ -34,7 +34,7 @@ class WechatUser:
             self.user_atag_vec[tag] = 0
         self.user_tag_score_vec = user_tag_score_vec
 
-    def user_tagging(self, reaction_list, a_u_tagmap):
+    def user_tagging(self, reaction_list, a_u_tagmap, a_map=None):
         """
         根据用户一段时间的交互记录，更新用户的u_tag分数
         :param reaction_list:user_id等于当前用户id的一段时间内的交互记录
@@ -44,7 +44,11 @@ class WechatUser:
         for reaction in reaction_list:
             weight = self.reaction_type_weight[reaction.reaction_type]
             a_id = reaction.reaction_a_id
-            article = get_article_by_id(a_id)
+            # todo a_map just for demo
+            if a_map:
+                article = a_map[a_id]
+            else:
+                article = get_article_by_id(a_id)
             for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
                 if a_tag_key in self.user_atag_vec:
                     self.user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
@@ -54,8 +58,10 @@ class WechatUser:
         # TODO 更好的权值赋值公式
         for a_tag_key in self.user_atag_vec:
             for u_tag_key in a_u_tagmap[a_tag_key]:
-                if u_tag_key in self.user_tag_score_vec:
-                    self.user_tag_score_vec[u_tag_key] += a_u_tagmap[a_tag_key][u_tag_key]
+                if u_tag_key in self.user_tag_score_vec:  # TODO 是否需要每次都加？
+                    self.user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * self.user_atag_vec[
+                        a_tag_key]
                 else:
-                    self.user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key]
+                    self.user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * self.user_atag_vec[
+                        a_tag_key]
         return self.user_tag_score_vec

@@ -20,6 +20,7 @@ def get_article_by_id(article_id):
     pass
 
 
+
 def get_global_user_tags():
     pass
 

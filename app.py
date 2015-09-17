@@ -4,7 +4,7 @@ import os
 import re
 import sys
 
-from flask import Flask, request, make_response, render_template
+from flask import Flask, request, make_response, render_template, redirect
 from flask.ext.cors import cross_origin
 import requests
 import jieba.analyse
@@ -12,7 +12,14 @@ import numpy as np
 from sklearn.externals import joblib
 
 from passage_classifier.vector_builder import VectorBuilder
+from wechat_analyzer import TaggingUtils
+from wechat_analyzer.demo_related import demo_main
 from wechat_analyzer.web_content_extractor import get_content
+
+# todo demo only
+from wechat_analyzer.basic_class.Article import Article
+from wechat_analyzer.basic_class.Reaction import Reaction
+from wechat_analyzer.basic_class.WechatUser import WechatUser
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -21,7 +28,9 @@ project_path = os.path.dirname(__file__)
 sys.path.append(project_path)
 app = Flask(__name__)
 vb = VectorBuilder()
-nbclf = joblib.load('%s/data/models/nbclf.model' % project_path)    #for mac pycharm
+nbclf = joblib.load('%s/data/models/nbclf.model' % project_path)  # for mac pycharm
+
+
 # nbclf = joblib.load('./data/models/nbclf.model') # for linux os
 
 
@@ -97,10 +106,10 @@ def classify_passage_boson():
     class_dict = {0: u'体育', 1: u'教育', 2: u'财经', 3: u'社会',
                   4: u'娱乐', 5: u'军事', 6: u'国内',
                   7: u'科技', 8: '互联网', 9: u'房产', 10: u'国际',
-                  11: u'健康', 12: u'汽车', 13: u'游戏'}
+                  11: u'女人', 12: u'汽车', 13: u'游戏'}
     classify_result = int(re.compile('\d+').findall(classify_result)[0])
-    jieba_textrank = jieba.analyse.textrank(content,)
-    jieba_keywords = jieba.analyse.extract_tags(content,allowPOS=['n','vn','ns','v'])
+    jieba_textrank = jieba.analyse.textrank(content, )
+    jieba_keywords = jieba.analyse.extract_tags(content, allowPOS=['n', 'vn', 'ns', 'v'])
     resp = make_response(
         json.dumps({'code': 0, 'class': class_dict[classify_result], 'keyword': keyword_result,
                     'jieba_textrank': jieba_textrank, 'jieba_keywords': jieba_keywords}, ensure_ascii=False),
@@ -123,14 +132,62 @@ def classify_passage_boson_url():
                   11: u'女人', 12: u'汽车', 13: u'游戏'}
     print classify_result
     classify_result = int(re.compile('\d+').findall(classify_result)[0])
-    jieba_textrank = jieba.analyse.textrank(content,topK=15)
-    jieba_keywords = jieba.analyse.extract_tags(content,allowPOS=['n','vn','ns','v'],topK=15)
+    jieba_textrank = jieba.analyse.textrank(content, topK=15)
+    jieba_keywords = jieba.analyse.extract_tags(content, allowPOS=['n', 'vn', 'ns', 'v'], topK=15)
+    topic_list = TaggingUtils.passage_second_level_classify(content)
     resp = make_response(
         json.dumps({'code': 0, 'class': class_dict[classify_result], 'keyword': keyword_result,
-                    'jieba_textrank': jieba_textrank, 'jieba_keywords': jieba_keywords}, ensure_ascii=False),
+                    'jieba_textrank': jieba_textrank, 'jieba_keywords': jieba_keywords,
+                    'topic_list': topic_list},
+                   ensure_ascii=False),
         200)
     return resp
 
 
+# todo wechat demo parts, delete later
+article_map = demo_main.init_articles()
+user_map = {}
+
+
+@app.route('/wechat_articles', methods=['GET'])
+def wechat_demo_get_articles():
+    a_list = []
+    for a in article_map:
+        article = article_map[a]
+        a_list.append({'a_id': article.a_id, 'a_tags': article.a_tags})
+    resp = make_response(json.dumps(a_list), 200)
+    return resp
+
+
+@app.route('/user_analyse', methods=['GET'])
+def redirect_user_req():
+    params = request.form
+    openid = params['openid']
+    if openid not in user_map:
+        user_map[openid] = WechatUser('123', [], {}, {}, {})
+    a_id = params['a_id']
+    # counting
+    wechatuser = user_map[openid]
+    temp_a_namemap = {'tfboy': 'TFBOYS为什么这样红 | 大象公会.txt', 'media': '【推荐】注意力时代不可不知的新媒体8人.txt',
+                      'sportclass': '体育与阶层 | 大象公会.txt', 'prod': '无人见过我们真正的产品 | 大象公会.txt',
+                      'wenzhou': '温州话能成为军事密码么 | 大象公会.txt', 'qiuyi': '球衣往事 | 大象公会.txt'}
+    reaction = Reaction('333', 'read', temp_a_namemap[a_id], '123')
+    wechatuser.user_tagging([reaction], demo_main.weight_map, a_map=article_map)
+    # url redirect
+    a_url_map = {
+        'tfboy': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956548&idx=1&sn=cc52b85072fefa296a7c5cb82dc62d34&scene=0&key=dffc561732c22651ddec47d91a219c794d0b204ef1258177ff8c11b3a77ba4188a6f8460a018e3f3e4bce4f5d8842b1f&ascene=0&uin=NDEyNTkyMzIw&devicetype=iMac+MacBookAir7%2C2+OSX+OSX+10.10.5+build(14F27)&version=11020201&pass_ticket=TzKtzXhA0l8eQjH%2F6GQzDu0eUG3q2CfimIMMueJ6COMF%2FlRyv63DyQgfdczmq0lj',
+        'media': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956583&idx=1&sn=136dd5735898adb03dc017af6a4ad1a5#rd',
+        'sportclass': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956618&idx=1&sn=34d1f00231abc79bb6d5e530e681f8f2#rd',
+        'prod': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956649&idx=1&sn=f25062f29eb6bc779bf1b15a3690603c#rd',
+        'wenzhou': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956662&idx=1&sn=da827726c75655d826be3c348bc88549#rd',
+        'qiuyi': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956662&idx=1&sn=da827726c75655d826be3c348bc88549#rd'}
+    return redirect(a_url_map[a_id], code=302)
+
+
+@app.route('/show_user_vec', methods=['GET'])
+def show_user_vec():
+    return json.dumps(user_map, ensure_ascii=False)
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=1234, debug=True)
+    app.run(host='0.0.0.0', port=1234, debug=True)

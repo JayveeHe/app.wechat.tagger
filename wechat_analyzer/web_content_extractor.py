@@ -4,6 +4,7 @@ import random
 import requests
 from bs4 import BeautifulSoup
 import time
+from wechat_crawler.third_party_parsers import get_wechat_content
 
 __author__ = 'jayvee'
 
@@ -18,29 +19,7 @@ def get_content(web_url):
     return text
 
 
-def get_wechat_content(wechat_url):
-    """
-    wechat parser
-    :param wechat_url:
-    :return:
-    """
-    content = requests.get(wechat_url).content
-    soup = BeautifulSoup(content)
-    text = ''
-    # post time
-    try:
-        post_title = soup.select('h2#activity-name')[0].text.strip()
-        post_date = soup.select('em#post-date')[0].text.strip()
-        post_user = soup.select('a#post-user')[0].text.strip()
-        for p in soup.select('p'):
-            text += p.text.strip() + '\n'
-        return {'post_content': text, 'post_date': post_date, 'post_user': post_user, 'post_title': post_title}
-    except Exception, e:
-        print e
-        return None
-
-
-def save_text_by_urls_file(urls_file_path):
+def save_text_by_wechat_urls_file(urls_file_path):
     urls = open(urls_file_path, 'r').read().split('\n')
     count = 0
     for url in urls:
@@ -64,4 +43,5 @@ if __name__ == '__main__':
     # for i in get_topics(text,10):
     #     print i
 
-    save_text_by_urls_file('./wechat_data/weixin_urls.txt')
+    save_text_by_wechat_urls_file('./wechat_data/weixin_urls.txt')
+
