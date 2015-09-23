@@ -149,6 +149,8 @@ article_map = demo_main.init_articles()
 user_map = {}
 
 
+# user_vec_map = {}
+
 @app.route('/wechat_articles', methods=['GET'])
 def wechat_demo_get_articles():
     a_list = []
@@ -161,18 +163,19 @@ def wechat_demo_get_articles():
 
 @app.route('/user_analyse', methods=['GET'])
 def redirect_user_req():
-    params = request.form
+    params = request.args
     openid = params['openid']
     if openid not in user_map:
         user_map[openid] = WechatUser('123', [], {}, {}, {})
     a_id = params['a_id']
     # counting
+    print a_id
     wechatuser = user_map[openid]
-    temp_a_namemap = {'tfboy': 'TFBOYS为什么这样红 | 大象公会.txt', 'media': '【推荐】注意力时代不可不知的新媒体8人.txt',
-                      'sportclass': '体育与阶层 | 大象公会.txt', 'prod': '无人见过我们真正的产品 | 大象公会.txt',
-                      'wenzhou': '温州话能成为军事密码么 | 大象公会.txt', 'qiuyi': '球衣往事 | 大象公会.txt'}
+    temp_a_namemap = {'tfboy': u'TFBOYS为什么这样红 | 大象公会.txt', 'media': u'【推荐】注意力时代不可不知的新媒体8人.txt',
+                      'sportclass': u'体育与阶层 | 大象公会.txt', 'prod': u'无人见过我们真正的产品 | 大象公会.txt',
+                      'wenzhou': u'温州话能成为军事密码么 | 大象公会.txt', 'qiuyi': u'球衣往事 | 大象公会.txt'}
     reaction = Reaction('333', 'read', temp_a_namemap[a_id], '123')
-    wechatuser.user_tagging([reaction], demo_main.weight_map, a_map=article_map)
+    wechatuser.user_tag_score_vec = wechatuser.user_tagging([reaction], demo_main.weight_map, a_map=article_map)
     # url redirect
     a_url_map = {
         'tfboy': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956548&idx=1&sn=cc52b85072fefa296a7c5cb82dc62d34&scene=0&key=dffc561732c22651ddec47d91a219c794d0b204ef1258177ff8c11b3a77ba4188a6f8460a018e3f3e4bce4f5d8842b1f&ascene=0&uin=NDEyNTkyMzIw&devicetype=iMac+MacBookAir7%2C2+OSX+OSX+10.10.5+build(14F27)&version=11020201&pass_ticket=TzKtzXhA0l8eQjH%2F6GQzDu0eUG3q2CfimIMMueJ6COMF%2FlRyv63DyQgfdczmq0lj',
@@ -186,7 +189,11 @@ def redirect_user_req():
 
 @app.route('/show_user_vec', methods=['GET'])
 def show_user_vec():
-    return json.dumps(user_map, ensure_ascii=False)
+    temp_user_vec_map = {}
+    for user_key in user_map:
+        temp_user_vec_map[user_key] = user_map[user_key].user_tag_score_vec
+
+    return json.dumps(temp_user_vec_map, ensure_ascii=False)
 
 
 if __name__ == '__main__':

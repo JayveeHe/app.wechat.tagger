@@ -6,8 +6,7 @@ __author__ = 'jayvee'
 
 class WechatUser:
     def __init__(self, user_id, user_taglist, global_a_tagdict, global_u_tagdict, user_atag_vec={},
-                 reaction_type_weight=None,
-                 user_tags_dict={}, user_tag_score_vec={}, a_u_tagmap={}):
+                 reaction_type_weight=None, user_tags_dict=None, user_tag_score_vec=None, a_u_tagmap=None):
         """
         init wechat user
         :param user_id: 用户id
@@ -20,6 +19,12 @@ class WechatUser:
         value为一个映射dict，该映射dict的key为能够映射到的单个tag，value为相应的映射权值
         :return:
         """
+        if not a_u_tagmap:
+            a_u_tagmap = {}
+        if not user_tags_dict:
+            user_tags_dict = {}
+        if not user_tag_score_vec:
+            user_tag_score_vec = {}
         if not reaction_type_weight:
             reaction_type_weight = {'read': 0.5, 'favor': 1.8, 'repost': 3}
         self.user_id = user_id

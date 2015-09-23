@@ -3,12 +3,12 @@ import json
 import os
 import re
 from wechat_analyzer import TaggingUtils
-import sys
 from wechat_analyzer.basic_class.Article import Article
 from wechat_analyzer.basic_class.Reaction import Reaction
 from wechat_analyzer.basic_class.WechatUser import WechatUser
 import wechat_analyzer.TagMapper
 
+import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -49,7 +49,7 @@ def init_articles():
         a_tags = {}
         for i in topics:
             a_tags[i['topic_tag']] = i['topic_prob']
-
+        f = f.decode(encoding='utf8')
         article_map[f] = Article(f, a_tags=a_tags)
     return article_map
 

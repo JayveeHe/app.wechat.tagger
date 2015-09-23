@@ -11,7 +11,8 @@ __author__ = 'jayvee'
 
 apath = os.path.dirname(__file__)
 sys.path.append(apath)
-
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 def passage_first_level_classify(content):
@@ -43,7 +44,7 @@ def passage_second_level_classify(content):
     """
     first_class = passage_first_level_classify(content)
     print first_class
-    lda_model = gensim.models.LdaModel.load('%s/wechat_data/lda_in_classify/%s.model' % (apath,first_class))
+    lda_model = gensim.models.LdaModel.load('%s/wechat_data/lda_in_classify/%s.model' % (apath, first_class))
     word_list = []
     words = pseg.cut(content)
     for item in words:
@@ -63,6 +64,6 @@ def passage_second_level_classify(content):
         for k in i:
             print lda_model.print_topic(k[0], 7), k[1]
             topic_list.append(
-                {'topic_tag': '%s-%s' % (first_class, k[0]), 'topic_content': lda_model.print_topic(k[0], 7),
+                {'topic_tag': u'%s-%s' % (first_class, k[0]), 'topic_content': lda_model.print_topic(k[0], 7),
                  'topic_prob': k[1]})
     return topic_list

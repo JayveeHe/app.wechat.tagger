@@ -49,7 +49,7 @@ def train_lda_among_classify(class_path, model_outpath, num_topics=15, iteration
 if __name__ == '__main__':
     # classify_text_files(u'../wechat_crawler/crawl_data/大象公会', './wechat_data/daxiang_result')
 
-    class_type = '军事'
+    class_type = '体育'
     train_lda_among_classify('./wechat_data/daxiang_result/%s' % class_type,
                              './wechat_data/lda_in_daxiang/%s.model' % class_type, num_topics=10)
     lm = lda_utils.loda_ldamodel_by_file('./wechat_data/lda_in_daxiang/%s.model' % class_type)
