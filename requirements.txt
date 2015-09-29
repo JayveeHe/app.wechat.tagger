@@ -12,3 +12,4 @@ scikit-learn
 gensim
 beautifulsoup4
 flask-cors
+pymongo
