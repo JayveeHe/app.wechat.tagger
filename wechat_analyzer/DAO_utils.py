@@ -103,7 +103,7 @@ re_db = wechat_analysis_collection['Reactions']
 conf_db = wechat_analysis_collection['Configs']
 
 
-def mongo_insert_article(inst_article, article_db=a_db):
+def mongo_insert_article(inst_article, article_db=a_db, is_overwrite=False):
     """
     直接连接mongo数据库，插入文章数据
     :param inst_article: Article实例
@@ -113,8 +113,13 @@ def mongo_insert_article(inst_article, article_db=a_db):
     article = {'title': inst_article.a_title, 'article_id': inst_article.a_id, 'tags': inst_article.a_tags,
                'content': inst_article.a_content, 'post_date': inst_article.post_date,
                'post_user': inst_article.post_user, 'article_url': inst_article.a_url}
-    article_db.insert(article)
-    return article
+    if not article_db.find_one({'article_id': inst_article.a_id}):
+
+        article_db.insert(article)
+    elif is_overwrite:
+        article_db.update_one({'article_id': inst_article.a_id}, {'$set': article})
+    else:
+        print 'article already existed!'
 
 
 def mongo_get_article(a_id, article_db=a_db):
@@ -129,7 +134,7 @@ def mongo_get_article(a_id, article_db=a_db):
     return article
 
 
-def mongo_insert_user(inst_user, user_db=u_db):
+def mongo_insert_user(inst_user, user_db=u_db, is_overwrite=False):
     """
 
     :param inst_user:
@@ -138,8 +143,13 @@ def mongo_insert_user(inst_user, user_db=u_db):
     """
     user = {'user_id': inst_user.user_id, 'user_name': inst_user.user_name, 'article_vec': inst_user.user_atag_vec,
             'user_tag_vec': inst_user.user_tag_score_vec}
-    user_db.insert(user)
-    # user_db.save()
+    if not user_db.find_one({'user_id': inst_user.user_id}):
+        user_db.insert(user)
+    elif is_overwrite:
+        user_db.update_one({'user_id': inst_user.user_id}, {'$set': user})
+    else:
+        print 'user already existed!'
+        # user_db.save()
 
 
 def mongo_get_user(user_id, user_db=u_db):
@@ -155,7 +165,7 @@ def mongo_get_user(user_id, user_db=u_db):
     return user
 
 
-def mongo_insert_reactions(inst_reaction, reaction_db=re_db):
+def mongo_insert_reactions(inst_reaction, reaction_db=re_db, is_overwrite=False):
     """
 
     :param inst_reaction:
@@ -165,8 +175,14 @@ def mongo_insert_reactions(inst_reaction, reaction_db=re_db):
     reaction = {'reaction_id': inst_reaction.reaction_id, 'reaction_type': inst_reaction.reaction_type,
                 'reaction_a_id': inst_reaction.reaction_a_id, 'reaction_user_id': inst_reaction.reaction_user_id,
                 'reaction_date': inst_reaction.reaction_date}
-    reaction_db.insert(reaction)
-    # reaction_db.save()
+    find_result = reaction_db.find_one({'reaction_id': inst_reaction.reaction_id})
+    if not find_result:
+        reaction_db.insert(reaction)
+        # reaction_db.save()
+    elif is_overwrite:
+        reaction_db.update_one({'reaction_id': inst_reaction.reaction_id}, {'$set': reaction})
+    else:
+        print 'reaction already existed!'
 
 
 def mongo_get_global_user_tags(config_db=conf_db):

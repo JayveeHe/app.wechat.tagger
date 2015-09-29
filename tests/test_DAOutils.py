@@ -37,9 +37,7 @@ class TestFlaskApp(unittest.TestCase):
                      'items': [
                          {'article_id': 'foo', 'article_thumb_id': 'thumb_id', 'article_url': 'http://trysenz.com',
                           'article_title': 'test_case',
-                          'article_content': '《碟中谍5》中，黑客班吉起初并没把三重保险的门禁放在眼里，'
-                                             '但当他得知必须穿越一套“步态分析系统”时，班吉彻底绝望了，'
-                                             '最后只能靠伊森.亨特屏息3分钟，通过自由式潜水强行入侵后台数据才得以攻破步态分析系统。',
+                          'article_content': '《碟中谍5》中，黑客班吉起初并没把三重保险的门禁放在眼里，但当他得知必须穿越一套“步态分析系统”时，班吉彻底绝望了，最后只能靠伊森.亨特屏息3分钟，通过自由式潜水强行入侵后台数据才得以攻破步态分析系统。',
                           'article_post_user': 'pycharm'}], 'update_time': 'flkjasdlkjfa'}
         rv = self.app.post('/api/v1/article', data=json.dumps(post_data))
         result = json.loads(rv.data)
