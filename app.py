@@ -207,7 +207,7 @@ def record_reactions():
     """
     try:
         user_id = request.args['openid']
-        article_id = request.args['media_id']
+        article_id = request.args['article_id']
         redirect_url = request.args['redirect_url']
         print time.time()
         reaction_id = hashlib.md5(user_id + article_id + str(time.time())).hexdigest()
@@ -231,19 +231,24 @@ def post_article():
     """
     try:
         jdata = json.loads(request.data)
-        article_id = jdata['article_id']
-        article_url = jdata['article_url']
-        article_title = jdata['article_title']
-        article_content = jdata['article_content']
-        article_post_user = jdata['article_post_user']
-        article_post_date = datetime.datetime.utcnow()
-        a_topiclist = TaggingUtils.passage_second_level_classify(article_content)
-        atags = {}
-        for topic in a_topiclist:
-            atags[topic['topic_tag']] = topic['topic_prob']
-        article = Article(a_id=article_id, a_title=article_title, post_user=article_post_user,
-                          post_date=article_post_date, a_tags=atags, a_url=article_url, a_content=article_content)
-        DAO_utils.mongo_insert_article(article)
+        media_id = jdata['media_id']
+        items = jdata['items']
+        update_time = jdata['update_time']
+        for item in items:
+            article_title = item['article_title']
+            article_content = item['article_content']
+            article_thumb_id = item['article_thumb_id']
+            article_id = hashlib.md5(media_id + article_title + article_thumb_id).hexdigest()
+            article_url = item['article_url']
+            article_post_user = item['article_post_user']
+            article_post_date = update_time
+            a_topiclist = TaggingUtils.passage_second_level_classify(article_content)
+            atags = {}
+            for topic in a_topiclist:
+                atags[topic['topic_tag']] = topic['topic_prob']
+            article = Article(a_id=article_id, a_title=article_title, post_user=article_post_user,
+                              post_date=article_post_date, a_tags=atags, a_url=article_url, a_content=article_content)
+            DAO_utils.mongo_insert_article(article)
         resp = make_response(json.dumps({'code': 0, 'msg': 'success'}), 200)
     except KeyError, ke:
         print ke
