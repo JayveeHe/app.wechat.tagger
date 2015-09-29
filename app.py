@@ -207,7 +207,9 @@ def record_reactions():
     """
     try:
         user_id = request.args['openid']
-        article_id = request.args['article_id']
+        media_id = request.args['media_id']
+        thumb_id = request.args['thumb_id']
+        article_id = hashlib.md5(media_id + thumb_id).hexdigest()
         redirect_url = request.args['redirect_url']
         print time.time()
         reaction_id = hashlib.md5(user_id + article_id + str(time.time())).hexdigest()
@@ -238,7 +240,7 @@ def post_article():
             article_title = item['article_title']
             article_content = item['article_content']
             article_thumb_id = item['article_thumb_id']
-            article_id = hashlib.md5(media_id + article_title + article_thumb_id).hexdigest()
+            article_id = hashlib.md5(media_id + article_thumb_id).hexdigest()
             article_url = item['article_url']
             article_post_user = item['article_post_user']
             article_post_date = update_time
@@ -268,7 +270,7 @@ def get_article(article_id):
     :return:
     """
     try:
-        params = request.args
+        # params = request.args
         # article_id = params['article_id']
         inst_article = DAO_utils.mongo_get_article(article_id)
         json_article = inst_article.get_json_object()
