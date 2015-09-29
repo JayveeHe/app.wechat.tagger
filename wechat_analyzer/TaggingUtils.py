@@ -95,7 +95,7 @@ def passage_second_level_classify(content):
     """
     first_class = passage_first_level_classify(content)
     print first_class
-    lda_model = gensim.models.LdaModel.load('%s/wechat_data/lda_in_daxiang/%s.model' % (apath, first_class))
+    lda_model = gensim.models.LdaModel.load('%s/wechat_data/lda_in_classify/%s.model' % (apath, first_class))
     word_list = []
     words = pseg.cut(content)
     for item in words:

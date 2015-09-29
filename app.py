@@ -242,7 +242,7 @@ def post_article():
         for topic in a_topiclist:
             atags[topic['topic_tag']] = topic['topic_prob']
         article = Article(a_id=article_id, a_title=article_title, post_user=article_post_user,
-                          post_date=article_post_date, a_tags=atags, a_url=article_url)
+                          post_date=article_post_date, a_tags=atags, a_url=article_url, a_content=article_content)
         DAO_utils.mongo_insert_article(article)
         resp = make_response(json.dumps({'code': 0, 'msg': 'success'}), 200)
     except KeyError, ke:
@@ -256,14 +256,15 @@ def post_article():
     return resp
 
 
-def get_article():
+@app.route('/api/v1/article/<article_id>')
+def get_article(article_id):
     """
     根据文章id获取文章信息
     :return:
     """
     try:
         params = request.args
-        article_id = params['article_id']
+        # article_id = params['article_id']
         inst_article = DAO_utils.mongo_get_article(article_id)
         json_article = inst_article.get_json_object()
         resp = make_response(json.dumps({'code': 0, 'article': json_article}), 200)
