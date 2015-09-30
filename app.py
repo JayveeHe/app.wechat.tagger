@@ -256,6 +256,9 @@ def post_article():
         resp = make_response(
             json.dumps({'code': 103,
                         'msg': 'request key error, details=%s' % str(ke)}), 500)
+    except DAO_utils.DAOException, de:
+        print de
+        resp = make_response(json.dumps({'code': 0, 'msg': 'success,article already existed'}), 200)
     except Exception, e:
         print e
         resp = make_response(json.dumps({'code': 1, 'msg': str(e)}), 500)
@@ -307,8 +310,16 @@ def new_user():
         resp = make_response(json.dumps({'code': 1, 'msg': str(e)}), 500)
     return resp
 
+
 def start_user_tagging():
-    reaction_list = DAO_utils.mongoget
+    """
+    根据所有未标注过的交互记录，对用户进行tagging
+    :return:
+    """
+    reaction_list = DAO_utils.mongo_get_reactions()
+    for reaction in reaction_list:
+        pass
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
