@@ -153,3 +153,7 @@ def user_tagging(inst_user, reaction_list, reaction_type_weight, a_u_tagmap):
                 user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
                     a_tag_key]
     return user_tag_score_vec
+
+
+def user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_tagmap):
+    pass

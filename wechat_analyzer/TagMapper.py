@@ -55,5 +55,23 @@ def update_a_u_map(reaction_list, a_u_map, insert_rate=0.001):
         return a_u_map
 
 
+def config_a_u_map(a_u_map):
+    if type(a_u_map) is dict:
+        DAO_utils.mongo_set_conf('a_u_map', a_u_map)
+    else:
+        raise TypeError('a_u_map should be a dict!')
+    pass
+
+
 if __name__ == '__main__':
     print map_atag2utag(u'娱乐-11')
+    weight_map = {u'娱乐-5': {u'追星族': 0.1, u'电视迷': 0.9},
+                  u'娱乐-9': {u'追星族': 0.7, u'八卦': 0.3},
+                  u'娱乐-11': {u'追星族': 0.7, u'八卦': 0.3},
+                  u'互联网-2': {u'互联网业界': 1},
+                  u'体育-4': {u'体育装备': 0.7, u'体育历史': 0.3},
+                  u'体育-6': {u'体育新闻': 1},
+                  u'体育-11': {u'体育装备': 0.2, u'体育历史': 0.8},
+                  u'军事-10': {u'军事轶事': 1},
+                  u'军事-11': {u'军事历史': 0.9, u'军事新闻': 0.1}}
+    config_a_u_map(weight_map)

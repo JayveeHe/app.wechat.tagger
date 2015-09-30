@@ -3,6 +3,7 @@ import os
 import time
 import sys
 from wechat_analyzer.basic_class.Article import Article
+from wechat_analyzer.basic_class.Reaction import Reaction
 from wechat_analyzer.basic_class.WechatUser import WechatUser
 
 __author__ = 'jayvee'
@@ -10,6 +11,16 @@ apath = os.path.dirname(__file__)
 sys.path.append(apath)
 reload(sys)
 sys.setdefaultencoding('utf-8')
+
+
+class DAOException(Exception):
+    ExceptionTypes = {'NO_RESULT_EXCEPTION'}
+
+    def __init__(self, msg):
+        self.message = msg
+
+    def __str__(self):
+        return str(self.message)
 
 
 def get_article_tagsdict(a_id):
@@ -103,6 +114,9 @@ re_db = wechat_analysis_collection['Reactions']
 conf_db = wechat_analysis_collection['Configs']
 
 
+# todo add logging system
+# TODO try/except
+
 def mongo_insert_article(inst_article, article_db=a_db, is_overwrite=False):
     """
     直接连接mongo数据库，插入文章数据
@@ -114,11 +128,11 @@ def mongo_insert_article(inst_article, article_db=a_db, is_overwrite=False):
                'content': inst_article.a_content, 'post_date': inst_article.post_date,
                'post_user': inst_article.post_user, 'article_url': inst_article.a_url}
     if not article_db.find_one({'article_id': inst_article.a_id}):
-
         article_db.insert(article)
     elif is_overwrite:
         article_db.update_one({'article_id': inst_article.a_id}, {'$set': article})
     else:
+        raise DAOException({'code': 1, 'msg': 'article already existed!'})
         print 'article already existed!'
 
 
@@ -128,10 +142,16 @@ def mongo_get_article(a_id, article_db=a_db):
     :param a_id:
     :return:
     """
+
     find_result = article_db.find_one({'article_id': a_id})
-    article = Article(a_id, a_title=find_result['title'], post_user=find_result['post_user'],
-                      a_tags=find_result['tags'], post_date=find_result['post_date'])
-    return article
+    if find_result:
+        article = Article(a_id, a_title=find_result['title'], post_user=find_result['post_user'],
+                          a_tags=find_result['tags'], post_date=find_result['post_date'],
+                          a_url=find_result['article_url'])
+        return article
+    else:
+        raise DAOException({'code': 1, 'msg': 'article not found.'})
+        print 'article not found.'
 
 
 def mongo_insert_user(inst_user, user_db=u_db, is_overwrite=False):
@@ -148,6 +168,7 @@ def mongo_insert_user(inst_user, user_db=u_db, is_overwrite=False):
     elif is_overwrite:
         user_db.update_one({'user_id': inst_user.user_id}, {'$set': user})
     else:
+        raise DAOException({'code': 1, 'msg': 'user already existed!'})
         print 'user already existed!'
         # user_db.save()
 
@@ -160,21 +181,24 @@ def mongo_get_user(user_id, user_db=u_db):
     :return:
     """
     find_result = u_db.find_one({'user_id': user_id})
-    user = WechatUser(user_id=user_id, user_name=find_result['user_name'], user_atag_vec=find_result['article_vec'],
-                      user_tag_score_vec=find_result['user_tag_vec'])
-    return user
+    if find_result:
+        user = WechatUser(user_id=user_id, user_name=find_result['user_name'], user_atag_vec=find_result['article_vec'],
+                          user_tag_score_vec=find_result['user_tag_vec'])
+        return user
+    else:
+        raise DAOException({'code': 1, 'msg': 'user not found.'})
 
 
 def mongo_insert_reactions(inst_reaction, reaction_db=re_db, is_overwrite=False):
     """
-
+    保存一条交互记录
     :param inst_reaction:
     :param reaction_db:
     :return:
     """
     reaction = {'reaction_id': inst_reaction.reaction_id, 'reaction_type': inst_reaction.reaction_type,
                 'reaction_a_id': inst_reaction.reaction_a_id, 'reaction_user_id': inst_reaction.reaction_user_id,
-                'reaction_date': inst_reaction.reaction_date}
+                'reaction_date': inst_reaction.reaction_date, 'is_checked': inst_reaction.is_checked}
     find_result = reaction_db.find_one({'reaction_id': inst_reaction.reaction_id})
     if not find_result:
         reaction_db.insert(reaction)
@@ -182,7 +206,29 @@ def mongo_insert_reactions(inst_reaction, reaction_db=re_db, is_overwrite=False)
     elif is_overwrite:
         reaction_db.update_one({'reaction_id': inst_reaction.reaction_id}, {'$set': reaction})
     else:
+        DAOException({'code': 1, 'msg': 'reaction already existed!'})
         print 'reaction already existed!'
+
+
+def mongo_get_reactions(reaction_db=re_db, **kwargs):
+    """
+    根据条件获取交互记录，默认为is_checked=False的所有记录
+    :param kwargs: 可选参数，包括time_range-一个元组（start_time,end_time）
+    :return:交互记录实例列表
+    """
+    find_result = re_db.find({"is_checked": False})
+    reaction_list = []
+    for item in find_result:
+        reaction_id = item['reaction_id']
+        reaction_type = item['reaction_type']
+        reaction_a_id = item['reaction_a_id']
+        reaction_user_id = item['reaction_user_id']
+        reaction_date = item['reaction_date']
+        is_checked = item['is_checked']
+        reaction = Reaction(reaction_id=reaction_id, reaction_type=reaction_type, reaction_a_id=reaction_a_id,
+                            reaction_user_id=reaction_user_id, reaction_date=reaction_date, is_checked=is_checked)
+        reaction_list.append(reaction)
+    return reaction_list
 
 
 def mongo_get_global_user_tags(config_db=conf_db):
@@ -217,7 +263,12 @@ def mongo_get_a_u_tagmap(config_db=conf_db):
     return find_result['value']
 
 
-def mongo_set_conf(config_name, config_value, config_db=conf_db):
-    conf_db.insert({'name': config_name, 'value': config_value})
+def mongo_set_conf(config_name, config_value, config_db=conf_db, is_overwrite=False):
+    if not conf_db.find_one({'name': config_name}):
+        conf_db.insert({'name': config_name, 'value': config_value})
+    elif is_overwrite:
+        conf_db.update_one({'name': config_name}, {'name': config_name, 'value': config_value})
+    else:
+        return -1
     # conf_db.save()
     return 0

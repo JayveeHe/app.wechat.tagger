@@ -210,15 +210,14 @@ def record_reactions():
         media_id = request.args['media_id']
         thumb_id = request.args['thumb_id']
         article_id = hashlib.md5(media_id + thumb_id).hexdigest()
-        redirect_url = request.args['redirect_url']
-        print time.time()
+        article = DAO_utils.mongo_get_article(article_id)
+        redirect_url = article.a_url
         reaction_id = hashlib.md5(user_id + article_id + str(time.time())).hexdigest()
         reaction = Reaction(reaction_id=reaction_id, reaction_type='read', reaction_a_id=article_id,
                             reaction_user_id=user_id,
                             reaction_date=datetime.datetime.utcnow())
         # todo db连接是否需要长期保持?
         DAO_utils.mongo_insert_reactions(reaction)
-
         return redirect(redirect_url)
     except Exception, e:
         print e
@@ -308,6 +307,8 @@ def new_user():
         resp = make_response(json.dumps({'code': 1, 'msg': str(e)}), 500)
     return resp
 
+def start_user_tagging():
+    reaction_list = DAO_utils.mongoget
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
