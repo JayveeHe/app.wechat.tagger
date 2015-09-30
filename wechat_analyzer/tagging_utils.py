@@ -8,6 +8,9 @@ import sys
 import DAO_utils
 from wechat_analyzer.basic_class.WechatUser import WechatUser
 
+"""
+用于给文章或用户打tag
+"""
 __author__ = 'jayvee'
 
 apath = os.path.dirname(__file__)

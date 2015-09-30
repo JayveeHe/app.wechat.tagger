@@ -1,5 +1,8 @@
 # coding=utf-8
 from wechat_analyzer import DAO_utils
+"""
+用于设置和更新tag之间的映射权重
+"""
 
 __author__ = 'jayvee'
 

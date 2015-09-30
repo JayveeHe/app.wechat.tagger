@@ -9,9 +9,9 @@ import datetime
 from urllib import urlencode
 import urllib2
 from gensim_utils import lda_utils
-from wechat_analyzer import TaggingUtils
+from wechat_analyzer import tagging_utils
 import wechat_analyzer
-from wechat_analyzer.TaggingUtils import passage_first_level_classify, passage_second_level_classify
+from wechat_analyzer.tagging_utils import passage_first_level_classify, passage_second_level_classify
 import wechat_analyzer.DAO_utils
 from  wechat_analyzer.basic_class import Article, Reaction, WechatUser
 import requests

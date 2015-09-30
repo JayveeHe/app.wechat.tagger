@@ -15,7 +15,7 @@ import numpy as np
 from sklearn.externals import joblib
 
 from passage_classifier.vector_builder import VectorBuilder
-from wechat_analyzer import TaggingUtils, DAO_utils
+from wechat_analyzer import tagging_utils, DAO_utils
 from wechat_analyzer.web_content_extractor import get_content
 
 # todo demo only
@@ -136,7 +136,7 @@ def classify_passage_boson_url():
     classify_result = int(re.compile('\d+').findall(classify_result)[0])
     jieba_textrank = jieba.analyse.textrank(content, topK=15)
     jieba_keywords = jieba.analyse.extract_tags(content, allowPOS=['n', 'vn', 'ns', 'v'], topK=15)
-    topic_list = TaggingUtils.passage_second_level_classify(content)
+    topic_list = tagging_utils.passage_second_level_classify(content)
     resp = make_response(
         json.dumps({'code': 0, 'class': class_dict[classify_result], 'keyword': keyword_result,
                     'jieba_textrank': jieba_textrank, 'jieba_keywords': jieba_keywords,
@@ -144,52 +144,6 @@ def classify_passage_boson_url():
                    ensure_ascii=False),
         200)
     return resp
-
-
-# todo wechat demo parts, delete later
-# article_map = demo_main.init_articles()
-# user_map = {}
-
-
-# user_vec_map = {}
-
-# @app.route('/wechat_articles', methods=['GET'])
-# def wechat_demo_get_articles():
-#     a_list = []
-#     for a in article_map:
-#         article = article_map[a]
-#         a_list.append({'a_id': article.a_id, 'a_tags': article.a_tags})
-#     resp = make_response(json.dumps(a_list), 200)
-#     return resp
-#
-#
-# @app.route('/user_analyse', methods=['GET'])
-# def redirect_user_req():
-#     params = request.args
-#     openid = params['openid']
-#     if openid not in user_map:
-#         user_map[openid] = WechatUser('123', [], {}, {}, {})
-#     a_id = params['a_id']
-#     # counting
-#     print a_id
-#     wechatuser = user_map[openid]
-#     temp_a_namemap = {'tfboy': u'TFBOYS为什么这样红 | 大象公会.txt', 'media': u'【推荐】注意力时代不可不知的新媒体8人.txt',
-#                       'sportclass': u'体育与阶层 | 大象公会.txt', 'prod': u'无人见过我们真正的产品 | 大象公会.txt',
-#                       'wenzhou': u'温州话能成为军事密码么 | 大象公会.txt', 'qiuyi': u'球衣往事 | 大象公会.txt'}
-#     reaction = Reaction('333', 'read', temp_a_namemap[a_id], '123')
-#     wechatuser.user_tag_score_vec = wechatuser.user_tagging([reaction], demo_main.weight_map, a_map=article_map)
-#     # url redirect
-#     a_url_map = {
-#         'tfboy': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956548&idx=1&sn=cc52b85072fefa296a7c5cb82dc62d34&scene=0&key=dffc561732c22651ddec47d91a219c794d0b204ef1258177ff8c11b3a77ba4188a6f8460a018e3f3e4bce4f5d8842b1f&ascene=0&uin=NDEyNTkyMzIw&devicetype=iMac+MacBookAir7%2C2+OSX+OSX+10.10.5+build(14F27)&version=11020201&pass_ticket=TzKtzXhA0l8eQjH%2F6GQzDu0eUG3q2CfimIMMueJ6COMF%2FlRyv63DyQgfdczmq0lj',
-#         'media': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956583&idx=1&sn=136dd5735898adb03dc017af6a4ad1a5#rd',
-#         'sportclass': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956618&idx=1&sn=34d1f00231abc79bb6d5e530e681f8f2#rd',
-#         'prod': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956649&idx=1&sn=f25062f29eb6bc779bf1b15a3690603c#rd',
-#         'wenzhou': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956662&idx=1&sn=da827726c75655d826be3c348bc88549#rd',
-#         'qiuyi': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956662&idx=1&sn=da827726c75655d826be3c348bc88549#rd'}
-#     return redirect(a_url_map[a_id], code=302)
-#
-#
-
 
 
 # 后端统计逻辑
@@ -245,7 +199,7 @@ def post_article():
             article_url = item['article_url']
             article_post_user = item['article_post_user']
             article_post_date = update_time
-            a_topiclist = TaggingUtils.passage_second_level_classify(article_content)
+            a_topiclist = tagging_utils.passage_second_level_classify(article_content)
             atags = {}
             for topic in a_topiclist:
                 atags[topic['topic_tag']] = topic['topic_prob']
@@ -323,7 +277,7 @@ def start_user_tagging():
         reaction_list = DAO_utils.mongo_get_reactions()
         reaction_type_weight = DAO_utils.mongo_get_reaction_type_weight()
         a_u_map = DAO_utils.mongo_get_a_u_tagmap()
-        count = TaggingUtils.user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_map)
+        count = tagging_utils.user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_map)
         return json.dumps({'code': 0, 'msg': 'handled %s reactions' % count})
     except Exception, e:
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
