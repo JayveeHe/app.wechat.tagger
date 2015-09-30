@@ -189,6 +189,10 @@ def classify_passage_boson_url():
 #     return redirect(a_url_map[a_id], code=302)
 #
 #
+
+
+
+# 后端统计逻辑
 # @app.route('/show_user_vec', methods=['GET'])
 # def show_user_vec():
 #     temp_user_vec_map = {}
@@ -197,8 +201,6 @@ def classify_passage_boson_url():
 #
 #     return json.dumps(temp_user_vec_map, ensure_ascii=False)
 
-
-# 后端统计逻辑
 @app.route('/api/v1/record', methods=['GET'])
 def record_reactions():
     """
