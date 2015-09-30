@@ -311,14 +311,20 @@ def new_user():
     return resp
 
 
+@app.route('/api/v1/tagging', methods=['GET'])
 def start_user_tagging():
     """
     根据所有未标注过的交互记录，对用户进行tagging
     :return:
     """
-    reaction_list = DAO_utils.mongo_get_reactions()
-    for reaction in reaction_list:
-        pass
+    try:
+        reaction_list = DAO_utils.mongo_get_reactions()
+        reaction_type_weight = DAO_utils.mongo_get_reaction_type_weight()
+        a_u_map = DAO_utils.mongo_get_a_u_tagmap()
+        count = TaggingUtils.user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_map)
+        return json.dumps({'code': 0, 'msg': 'handled %s reactions' % count})
+    except Exception, e:
+        return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
 
 
 if __name__ == '__main__':

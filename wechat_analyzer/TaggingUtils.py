@@ -6,6 +6,7 @@ import requests
 import jieba.posseg as pseg
 import sys
 import DAO_utils
+from wechat_analyzer.basic_class.WechatUser import WechatUser
 
 __author__ = 'jayvee'
 
@@ -156,4 +157,61 @@ def user_tagging(inst_user, reaction_list, reaction_type_weight, a_u_tagmap):
 
 
 def user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_tagmap):
-    pass
+    """
+    根据交互记录列表来给用户打tags
+    :param reaction_list:
+    :param reaction_type_weight:
+    :param a_u_tagmap:
+    :return:
+    """
+    process_count = 0
+    for reaction in reaction_list:
+        # reaction_id = reaction.reaction_id
+        user_id = reaction.reaction_user_id
+        a_id = reaction.reaction_a_id
+        reaction_type = reaction.reaction_type
+        try:
+            inst_user = DAO_utils.mongo_get_user(user_id)
+        except DAO_utils.DAOException, de:
+            print de
+            # 数据库中不存在该用户，则新建一个
+            inst_user = WechatUser(user_id=user_id)
+            DAO_utils.mongo_insert_user(inst_user)
+
+        user_atag_vec = inst_user.user_atag_vec
+        user_tag_score_vec = inst_user.user_tag_score_vec
+
+        weight = reaction_type_weight[reaction_type]
+        try:
+            article = DAO_utils.mongo_get_article(a_id)
+            for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
+                if a_tag_key in user_atag_vec:
+                    user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
+                else:
+                    user_atag_vec[a_tag_key] = weight * article.a_tags[a_tag_key]
+        except DAO_utils.DAOException, de:
+            print de
+            continue  # 没有该文章在数据库中，则跳过
+
+        # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
+        # TODO 更好的权值赋值公式
+        for a_tag_key in user_atag_vec.keys():
+            for u_tag_key in a_u_tagmap[a_tag_key]:
+                if u_tag_key in user_tag_score_vec:  # TODO 是否需要每次都加？
+                    user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
+                        a_tag_key]
+                else:
+                    user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
+                        a_tag_key]
+        # 保存用户信息
+        try:
+            DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
+            reaction.is_checked = True
+            DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
+        except DAO_utils.DAOException, de:
+            print de
+            continue  # 更新信息失败则跳过，这样该条reaction将不会被标注为checked
+            # TODO（隐患：是否会出现长期遗留的问题reaction？）
+
+        process_count += 1
+    return process_count

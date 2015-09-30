@@ -231,6 +231,7 @@ def mongo_get_reactions(reaction_db=re_db, **kwargs):
     return reaction_list
 
 
+# TODO add try/except to get config func
 def mongo_get_global_user_tags(config_db=conf_db):
     """
 
@@ -267,7 +268,7 @@ def mongo_set_conf(config_name, config_value, config_db=conf_db, is_overwrite=Fa
     if not conf_db.find_one({'name': config_name}):
         conf_db.insert({'name': config_name, 'value': config_value})
     elif is_overwrite:
-        conf_db.update_one({'name': config_name}, {'name': config_name, 'value': config_value})
+        conf_db.update_one({'name': config_name}, {'$set': {'name': config_name, 'value': config_value}})
     else:
         return -1
     # conf_db.save()

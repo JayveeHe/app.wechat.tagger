@@ -57,10 +57,16 @@ def update_a_u_map(reaction_list, a_u_map, insert_rate=0.001):
 
 def config_a_u_map(a_u_map):
     if type(a_u_map) is dict:
-        DAO_utils.mongo_set_conf('a_u_map', a_u_map)
+        DAO_utils.mongo_set_conf('a_u_tagmap', a_u_map)
     else:
         raise TypeError('a_u_map should be a dict!')
-    pass
+
+
+def config_reaction_type_weight(reaction_type_weight):
+    if type(reaction_type_weight) is dict:
+        DAO_utils.mongo_set_conf('reaction_type_weight', reaction_type_weight, is_overwrite=True)
+    else:
+        raise TypeError('reaction_type_weight should be a dict!')
 
 
 if __name__ == '__main__':
@@ -75,3 +81,6 @@ if __name__ == '__main__':
                   u'军事-10': {u'军事轶事': 1},
                   u'军事-11': {u'军事历史': 0.9, u'军事新闻': 0.1}}
     config_a_u_map(weight_map)
+
+    reaction_type_weight = {'read': 0.5, 'favor': 1.8, 'repost': 3.0}
+    config_reaction_type_weight(reaction_type_weight)
