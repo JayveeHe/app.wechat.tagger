@@ -1,5 +1,6 @@
 # coding=utf-8
 from wechat_analyzer import DAO_utils
+
 """
 用于设置和更新tag之间的映射权重
 """
@@ -30,6 +31,7 @@ def update_a_u_map(reaction_list, a_u_map, insert_rate=0.001):
     :param insert_rate:
     :return:
     """
+    # TODO 更顺畅的权值更新公式
     for reaction in reaction_list:
         # process article tags
         reaction_a_id = reaction.reaction_a_id

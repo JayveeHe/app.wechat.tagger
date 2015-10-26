@@ -273,3 +273,17 @@ def mongo_set_conf(config_name, config_value, config_db=conf_db, is_overwrite=Fa
         return -1
     # conf_db.save()
     return 0
+
+
+def mongo_get_openid_by_tags(tags, user_db=u_db):
+    openid_list = []
+    condition = 'user_tag_vec.%s' % tags
+    if tags:
+        find_result = u_db.find({condition: {'$exists': True}})
+        for item in find_result:
+            openid_list.append(item['user_id'])
+    return openid_list
+
+
+if __name__ == '__main__':
+    print mongo_get_openid_by_tags(u'八卦')

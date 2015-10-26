@@ -78,8 +78,13 @@ def passage_first_level_classify(content):
     """
     for i in xrange(3):
         try:
+            # s = requests.Session()
+            # req = requests.Request('POST','http://bosonnlp.com/analysis/category',data={'data': content})
+            headers = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
             classify_result = \
-                json.loads(requests.post('http://bosonnlp.com/analysis/category', {'data': content}).content)[0]
+                json.loads(
+                    requests.post('http://bosonnlp.com/analysis/category', data={'data': content}, timeout=5,
+                                  headers=headers).content)[0]
             class_dict = {0: u'体育', 1: u'教育', 2: u'财经', 3: u'社会',
                           4: u'娱乐', 5: u'军事', 6: u'国内',
                           7: u'科技', 8: '互联网', 9: u'房产', 10: u'国际',
