@@ -276,7 +276,7 @@ def mongo_set_conf(config_name, config_value, config_db=conf_db, is_overwrite=Fa
 
 
 def mongo_get_openid_by_tags(tags, user_db=u_db):
-    openid_list = []
+    openid_list = set()
     conditions = []
     for tag in tags:
         conditions.append('user_tag_vec.%s' % tag)
@@ -286,8 +286,8 @@ def mongo_get_openid_by_tags(tags, user_db=u_db):
     if tags:
         find_result = u_db.find(find_filter)
         for item in find_result:
-            openid_list.append(item['user_id'])
-    return openid_list
+            openid_list.add(item['user_id'])
+    return list(openid_list)
 
 
 def mongo_get_all_taglist(config_db=conf_db):
