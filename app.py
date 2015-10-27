@@ -283,11 +283,24 @@ def start_user_tagging():
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
 
 
-@app.route('/api/v1/openid/<tag>', methods=['GET'])
-def get_openidlist_by_tag(tag):
+@app.route('/api/v1/openid', methods=['POST'])
+def get_openidlist_by_tag():
     try:
-        openid_list = DAO_utils.mongo_get_openid_by_tags(tag)
+        req_data = json.loads(request.data)
+        taglist = req_data['tagList']
+        openid_list = DAO_utils.mongo_get_openid_by_tags(taglist)
         return json.dumps({'code': 0, 'openid_list': openid_list})
+    except Exception, e:
+        print e
+        return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
+
+
+@app.route('/api/v1/taglist', methods=['GET'])
+def get_all_taglist():
+    try:
+        taglist = DAO_utils.mongo_get_all_taglist()
+        return json.dumps({'code': 0, 'tagList': taglist},ensure_ascii=False)
+
     except Exception, e:
         print e
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})

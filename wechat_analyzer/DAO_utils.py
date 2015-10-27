@@ -277,13 +277,28 @@ def mongo_set_conf(config_name, config_value, config_db=conf_db, is_overwrite=Fa
 
 def mongo_get_openid_by_tags(tags, user_db=u_db):
     openid_list = []
-    condition = 'user_tag_vec.%s' % tags
+    conditions = []
+    for tag in tags:
+        conditions.append('user_tag_vec.%s' % tag)
+    find_filter = {}
+    for condition in conditions:
+        find_filter[condition] = {'$exists': True}
     if tags:
-        find_result = u_db.find({condition: {'$exists': True}})
+        find_result = u_db.find(find_filter)
         for item in find_result:
             openid_list.append(item['user_id'])
     return openid_list
 
 
+def mongo_get_all_taglist(config_db=conf_db):
+    find_result = config_db.find_one({'name': 'a_u_tagmap'})
+    taglist = set()
+    for atag in find_result['value']:
+        for utag in find_result['value'][atag]:
+            taglist.add(utag)
+    return list(taglist)
+
+
 if __name__ == '__main__':
-    print mongo_get_openid_by_tags(u'八卦')
+    print mongo_get_openid_by_tags([u'军事新闻', u'军事历史'])
+    print mongo_get_all_taglist()
