@@ -162,27 +162,28 @@ def record_reactions():
     :return:
     """
     try:
-        APPID = 'wx77081de86b8e6232'
-        SECRET = '0b4dad57c03c8ce891762c8325b6ef0c'
-        code = request.args.get('code')
+        # APPID = 'wx77081de86b8e6232'
+        # SECRET = '0b4dad57c03c8ce891762c8325b6ef0c'
+        # code = request.args.get('code')
+        user_id = request.args['openid']
         media_id = request.args['media_id']
         thumb_id = request.args['thumb_id']
         article_id = hashlib.md5(media_id + thumb_id).hexdigest()
         article = DAO_utils.mongo_get_article(article_id)
         redirect_url = article.a_url
-        if code:
-            token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token'
-            raw_auth_result = requests.get(token_url, {'appid': APPID, 'secret': SECRET, 'code': code})
-            auth_result = json.loads(raw_auth_result)
-            user_id = auth_result.get('openid')
-            reaction_id = hashlib.md5(user_id + article_id + str(time.time())).hexdigest()
-            reaction = Reaction(reaction_id=reaction_id, reaction_type='read', reaction_a_id=article_id,
-                                reaction_user_id=user_id,
-                                reaction_date=datetime.datetime.utcnow())
-            # todo db连接是否需要长期保持?
-            DAO_utils.mongo_insert_reactions(reaction)
-        else:
-            print 'user did not agree to auth'
+        # if code:
+        #     token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token'
+        #     raw_auth_result = requests.get(token_url, {'appid': APPID, 'secret': SECRET, 'code': code})
+        #     auth_result = json.loads(raw_auth_result)
+        #     user_id = auth_result.get('openid')
+        reaction_id = hashlib.md5(user_id + article_id + str(time.time())).hexdigest()
+        reaction = Reaction(reaction_id=reaction_id, reaction_type='read', reaction_a_id=article_id,
+                            reaction_user_id=user_id,
+                            reaction_date=datetime.datetime.utcnow())
+        # todo db连接是否需要长期保持?
+        DAO_utils.mongo_insert_reactions(reaction)
+        # else:
+        #     print 'user did not agree to auth'
         return redirect(redirect_url)
     except Exception, e:
         print e
