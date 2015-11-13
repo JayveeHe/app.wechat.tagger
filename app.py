@@ -1,8 +1,11 @@
 # coding=utf-8
+import hashlib
 import json
 import os
 import re
 import sys
+import datetime
+import time
 
 from flask import Flask, request, make_response, render_template, redirect
 from flask.ext.cors import cross_origin
@@ -12,8 +15,7 @@ import numpy as np
 from sklearn.externals import joblib
 
 from passage_classifier.vector_builder import VectorBuilder
-from wechat_analyzer import TaggingUtils
-from wechat_analyzer.demo_related import demo_main
+from wechat_analyzer import tagging_utils, DAO_utils
 from wechat_analyzer.web_content_extractor import get_content
 
 # todo demo only
@@ -134,7 +136,7 @@ def classify_passage_boson_url():
     classify_result = int(re.compile('\d+').findall(classify_result)[0])
     jieba_textrank = jieba.analyse.textrank(content, topK=15)
     jieba_keywords = jieba.analyse.extract_tags(content, allowPOS=['n', 'vn', 'ns', 'v'], topK=15)
-    topic_list = TaggingUtils.passage_second_level_classify(content)
+    topic_list = tagging_utils.passage_second_level_classify(content)
     resp = make_response(
         json.dumps({'code': 0, 'class': class_dict[classify_result], 'keyword': keyword_result,
                     'jieba_textrank': jieba_textrank, 'jieba_keywords': jieba_keywords,
@@ -144,49 +146,171 @@ def classify_passage_boson_url():
     return resp
 
 
-# todo wechat demo parts, delete later
-article_map = demo_main.init_articles()
-user_map = {}
+# 后端统计逻辑
+# @app.route('/show_user_vec', methods=['GET'])
+# def show_user_vec():
+#     temp_user_vec_map = {}
+#     for user_key in user_map:
+#         temp_user_vec_map[user_key] = user_map[user_key].user_tag_score_vec
+#
+#     return json.dumps(temp_user_vec_map, ensure_ascii=False)
+
+@app.route('/api/v1/record', methods=['GET'])
+def record_reactions():
+    """
+    用于记录交互行为
+    :return:
+    """
+    try:
+        user_id = request.args['openid']
+        media_id = request.args['media_id']
+        thumb_id = request.args['thumb_id']
+        article_id = hashlib.md5(media_id + thumb_id).hexdigest()
+        article = DAO_utils.mongo_get_article(article_id)
+        redirect_url = article.a_url
+        # if code:
+        #     token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token'
+        #     raw_auth_result = requests.get(token_url, {'appid': APPID, 'secret': SECRET, 'code': code})
+        #     auth_result = json.loads(raw_auth_result)
+        #     user_id = auth_result.get('openid')
+        reaction_id = hashlib.md5(user_id + article_id + str(time.time())).hexdigest()
+        reaction = Reaction(reaction_id=reaction_id, reaction_type='read', reaction_a_id=article_id,
+                            reaction_user_id=user_id,
+                            reaction_date=datetime.datetime.utcnow())
+        # todo db连接是否需要长期保持?
+        DAO_utils.mongo_insert_reactions(reaction)
+        # else:
+        #     print 'user did not agree to auth'
+        return redirect(redirect_url)
+    except Exception, e:
+        print e
+        return make_response(json.dumps({'code': 1, 'msg': str(e)}), 500)
 
 
-@app.route('/wechat_articles', methods=['GET'])
-def wechat_demo_get_articles():
-    a_list = []
-    for a in article_map:
-        article = article_map[a]
-        a_list.append({'a_id': article.a_id, 'a_tags': article.a_tags})
-    resp = make_response(json.dumps(a_list), 200)
+@app.route('/api/v1/article', methods=['POST'])
+def post_article():
+    """
+    发表新文章后，首先调用该函数进行文章分析和数据库存入
+    :return:
+    """
+    try:
+        jdata = json.loads(request.data)
+        media_id = jdata['media_id']
+        items = jdata['items']
+        update_time = jdata['update_time']
+        for item in items:
+            article_title = item['article_title']
+            article_content = item['article_content']
+            article_thumb_id = item['article_thumb_id']
+            article_id = hashlib.md5(media_id + article_thumb_id).hexdigest()
+            article_url = item['article_url']
+            article_post_user = item['article_post_user']
+            article_post_date = update_time
+            a_topiclist = tagging_utils.passage_second_level_classify(article_content)
+            atags = {}
+            for topic in a_topiclist:
+                atags[topic['topic_tag']] = topic['topic_prob']
+            article = Article(a_id=article_id, a_title=article_title, post_user=article_post_user,
+                              post_date=article_post_date, a_tags=atags, a_url=article_url, a_content=article_content)
+            DAO_utils.mongo_insert_article(article)
+        resp = make_response(json.dumps({'code': 0, 'msg': 'success'}), 200)
+    except KeyError, ke:
+        print ke
+        resp = make_response(
+            json.dumps({'code': 103,
+                        'msg': 'request key error, details=%s' % str(ke)}), 500)
+    except DAO_utils.DAOException, de:
+        print de
+        resp = make_response(json.dumps({'code': 0, 'msg': 'success,article already existed'}), 200)
+    except Exception, e:
+        print e
+        resp = make_response(json.dumps({'code': 1, 'msg': str(e)}), 500)
     return resp
 
 
-@app.route('/user_analyse', methods=['GET'])
-def redirect_user_req():
-    params = request.form
-    openid = params['openid']
-    if openid not in user_map:
-        user_map[openid] = WechatUser('123', [], {}, {}, {})
-    a_id = params['a_id']
-    # counting
-    wechatuser = user_map[openid]
-    temp_a_namemap = {'tfboy': 'TFBOYS为什么这样红 | 大象公会.txt', 'media': '【推荐】注意力时代不可不知的新媒体8人.txt',
-                      'sportclass': '体育与阶层 | 大象公会.txt', 'prod': '无人见过我们真正的产品 | 大象公会.txt',
-                      'wenzhou': '温州话能成为军事密码么 | 大象公会.txt', 'qiuyi': '球衣往事 | 大象公会.txt'}
-    reaction = Reaction('333', 'read', temp_a_namemap[a_id], '123')
-    wechatuser.user_tagging([reaction], demo_main.weight_map, a_map=article_map)
-    # url redirect
-    a_url_map = {
-        'tfboy': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956548&idx=1&sn=cc52b85072fefa296a7c5cb82dc62d34&scene=0&key=dffc561732c22651ddec47d91a219c794d0b204ef1258177ff8c11b3a77ba4188a6f8460a018e3f3e4bce4f5d8842b1f&ascene=0&uin=NDEyNTkyMzIw&devicetype=iMac+MacBookAir7%2C2+OSX+OSX+10.10.5+build(14F27)&version=11020201&pass_ticket=TzKtzXhA0l8eQjH%2F6GQzDu0eUG3q2CfimIMMueJ6COMF%2FlRyv63DyQgfdczmq0lj',
-        'media': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956583&idx=1&sn=136dd5735898adb03dc017af6a4ad1a5#rd',
-        'sportclass': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956618&idx=1&sn=34d1f00231abc79bb6d5e530e681f8f2#rd',
-        'prod': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956649&idx=1&sn=f25062f29eb6bc779bf1b15a3690603c#rd',
-        'wenzhou': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956662&idx=1&sn=da827726c75655d826be3c348bc88549#rd',
-        'qiuyi': 'http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=209956662&idx=1&sn=da827726c75655d826be3c348bc88549#rd'}
-    return redirect(a_url_map[a_id], code=302)
+@app.route('/api/v1/article/<article_id>')
+def get_article(article_id):
+    """
+    根据文章id获取文章信息
+    :return:
+    """
+    try:
+        # params = request.args
+        # article_id = params['article_id']
+        inst_article = DAO_utils.mongo_get_article(article_id)
+        json_article = inst_article.get_json_object()
+        resp = make_response(json.dumps({'code': 0, 'article': json_article}), 200)
+    except KeyError, ke:
+        print ke
+        resp = make_response(
+            json.dumps({'code': 103,
+                        'msg': 'request key error, details=%s' % str(ke)}), 500)
+    except Exception, e:
+        print e
+        resp = make_response(json.dumps({'code': 1, 'msg': str(e)}), 500)
+    return resp
 
 
-@app.route('/show_user_vec', methods=['GET'])
-def show_user_vec():
-    return json.dumps(user_map, ensure_ascii=False)
+@app.route('/api/v1/user', methods=['POST'])
+def new_user():
+    """
+    每当有用户新关注后，回调该函数，将用户信息存入
+    :return:
+    """
+    try:
+        jdata = json.loads(request.data)
+        user_id = jdata['openid']
+        wechat_user = WechatUser(user_id)
+        DAO_utils.mongo_insert_user(wechat_user)
+        resp = make_response(json.dumps({'code': 0, 'msg': 'success'}), 200)
+    except KeyError, ke:
+        print ke
+        resp = make_response(
+            json.dumps({'code': 103,
+                        'msg': 'request key error, details=%s' % str(ke)}), 500)
+    except Exception, e:
+        print e
+        resp = make_response(json.dumps({'code': 1, 'msg': str(e)}), 500)
+    return resp
+
+
+@app.route('/api/v1/tagging', methods=['GET'])
+def start_user_tagging():
+    """
+    根据所有未标注过的交互记录，对用户进行tagging
+    :return:
+    """
+    try:
+        reaction_list = DAO_utils.mongo_get_reactions()
+        reaction_type_weight = DAO_utils.mongo_get_reaction_type_weight()
+        a_u_map = DAO_utils.mongo_get_a_u_tagmap()
+        count = tagging_utils.user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_map)
+        return json.dumps({'code': 0, 'msg': 'handled %s reactions' % count})
+    except Exception, e:
+        return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
+
+
+@app.route('/api/v1/openid', methods=['POST'])
+def get_openidlist_by_tag():
+    try:
+        req_data = json.loads(request.data)
+        taglist = req_data['tagList']
+        openid_list = DAO_utils.mongo_get_openid_by_tags(taglist)
+        return json.dumps({'code': 0, 'openid_list': openid_list})
+    except Exception, e:
+        print e
+        return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
+
+
+@app.route('/api/v1/taglist', methods=['GET'])
+def get_all_taglist():
+    try:
+        taglist = DAO_utils.mongo_get_all_taglist()
+        return json.dumps({'code': 0, 'tagList': taglist}, ensure_ascii=False)
+
+    except Exception, e:
+        print e
+        return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
 
 
 if __name__ == '__main__':

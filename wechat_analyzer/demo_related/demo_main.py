@@ -2,13 +2,13 @@
 import json
 import os
 import re
-from wechat_analyzer import TaggingUtils
-import sys
+from wechat_analyzer import tagging_utils
 from wechat_analyzer.basic_class.Article import Article
 from wechat_analyzer.basic_class.Reaction import Reaction
 from wechat_analyzer.basic_class.WechatUser import WechatUser
-import wechat_analyzer.TagMapper
+import wechat_analyzer.tag_mapper
 
+import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -30,7 +30,7 @@ weight_map = {u'娱乐-5': {u'追星族': 0.1, u'电视迷': 0.9},
 
 def show_content_topic_prob(text_path):
     test_text = open(text_path, 'r').read()
-    topics = TaggingUtils.passage_second_level_classify(test_text)
+    topics = tagging_utils.passage_second_level_classify(test_text)
     for i in topics:
         print i['topic_tag'], i['topic_prob']
     return topics
@@ -49,7 +49,7 @@ def init_articles():
         a_tags = {}
         for i in topics:
             a_tags[i['topic_tag']] = i['topic_prob']
-
+        f = f.decode(encoding='utf8')
         article_map[f] = Article(f, a_tags=a_tags)
     return article_map
 
