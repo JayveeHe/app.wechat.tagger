@@ -18,6 +18,8 @@ from  wechat_analyzer.basic_class import Article, Reaction, WechatUser
 import requests
 import sys
 
+from tencent_qcloud_classifier.QcloudApi.qcloudapi import QcloudApi
+
 from bs4 import BeautifulSoup
 
 reload(sys)
@@ -47,7 +49,7 @@ def classify_text_files(files_root_path, result_path):
             fout = codecs.open('%s/%s/%s' % (result_path, result, f), 'w')
         fout.write(ftext)
 
-        time.sleep(random.random()*3)
+        time.sleep(random.random() * 3)
     print 'done'
 
 
@@ -75,7 +77,42 @@ def classify_rawtext_files(files_root_path, result_path, pass_num=-1):
             fout = codecs.open(os.path.join(result_path, result, f), 'w')
         fout.write(ftext)
 
-        time.sleep(random.random()*3+0.2)
+        time.sleep(random.random() * 3 + 0.2)
+    print 'done'
+
+
+def tencent_classify_rawtext_files(files_root_path, result_path, pass_num=-1):
+    count = 0
+    flist = os.listdir(files_root_path)
+    for f in flist:
+
+        print '%s:%s' % (count, f)
+        count += 1
+        if count < pass_num:
+            continue
+        ftext = codecs.open(os.path.join(files_root_path, f), 'r', encoding='utf-8').read()
+        try:
+            # json_obj = json.loads(ftext)
+            result = tencent_classify(ftext)
+        except Exception, e:  # 懒得差各种异常了，直接重复
+            print e
+            continue
+        if result['code'] == 0:
+            for class_type in result['classes']:
+                if class_type['conf'] > 0.5:
+                    try:
+                        fout = codecs.open(os.path.join(result_path, class_type['class'], f + '.txt'), 'w')
+                    except IOError, e:
+                        print e
+                        os.mkdir(os.path.join(result_path, class_type['class']))
+                        fout = codecs.open(os.path.join(result_path, class_type['class'], f + ".txt"), 'w')
+                    except KeyError, ke:
+                        print ke
+                        continue
+                    fout.write(ftext)
+        else:
+            print result
+        time.sleep(random.random() * 3 + 0.2)
     print 'done'
 
 
@@ -150,11 +187,65 @@ def process_weixinpage_data(fin_root="/alidata/weichat_article_data/splits/",
                     continue
 
 
+def tencent_classify(content):
+    """
+    given a passage content, return its first level class
+    :param content:
+    :return:
+    """
+    action = 'TextClassify'
+    module = 'wenzhi'
+    config = {
+        'Region': 'gz',
+        'secretId': 'AKIDi1ohL0zeMXuUaxEwGHMgd2aXeQYqnYJS',
+        'secretKey': 'oUEND16w54I8i6uragtks71EFK70hg8a',
+        'method': 'get'
+    }
+    content = content.replace('\n', '')
+    content = content.replace(' ', '')
+    params = {
+        u"content": content.replace('\n', '')
+    }
+    for i in xrange(3):
+        try:
+            qcloud_service = QcloudApi(module, config)
+            result = qcloud_service.call(action, params)
+            result_obj = json.loads(result)
+            if result_obj['code'] != 0:
+                continue
+            else:
+                return result_obj
+        except Exception, e:
+            return {'code': 1, 'msg': 'unknown error, detail=%s' % e}
+
+    return {'code': 1, 'mgs': 'can not classify text'}
+
+    # for i in xrange(3):
+    #     try:
+    #         # s = requests.Session()
+    #         # req = requests.Request('POST','http://bosonnlp.com/analysis/category',data={'data': content})
+    #         headers = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:22.0) Gecko/20100101 Firefox/22.0'}
+    #         classify_result = \
+    #             json.loads(
+    #                 requests.post('http://bosonnlp.com/analysis/category', data={'data': content}, timeout=5,
+    #                               headers=headers).content)[0]
+    #         class_dict = {0: u'体育', 1: u'教育', 2: u'财经', 3: u'社会',
+    #                       4: u'娱乐', 5: u'军事', 6: u'国内',
+    #                       7: u'科技', 8: '互联网', 9: u'房产', 10: u'国际',
+    #                       11: u'女人', 12: u'汽车', 13: u'游戏'}
+    #         classify_result = class_dict[classify_result]
+    #         return classify_result
+    #     except requests.Timeout, to:
+    #         print to
+    #         continue
+
+
 if __name__ == '__main__':
     # classify_text_files(u'../wechat_crawler/crawl_data/大象公会', './wechat_data/daxiang_result')
 
-    classify_rawtext_files(u'/Users/jayvee/weixin_article/articles/',
-                           '/Users/jayvee/weixin_article/classified',131)
+    tencent_classify(u'''在曼彻斯特高级杯的决赛中，强大的曼联4:0轻松战胜博尔顿。开场仅仅2分钟，W基恩就打进一球。基恩伤愈后已经在三场比赛打进了四粒进球。下半场刚刚开始，贾努扎伊和扎哈的进球就帮助球队3:0领先。第87分钟，科尔也取得了进球。强大的曼联完全主宰了本场比赛。\n''')
+    tencent_classify_rawtext_files(u'/Users/jayvee/weixin_article/articles/',
+                                   '/Users/jayvee/weixin_article/tencent_classified', -1)
 
     # 生成lda模型
     # class_type = '财经'

@@ -162,9 +162,6 @@ def record_reactions():
     :return:
     """
     try:
-        # APPID = 'wx77081de86b8e6232'
-        # SECRET = '0b4dad57c03c8ce891762c8325b6ef0c'
-        # code = request.args.get('code')
         user_id = request.args['openid']
         media_id = request.args['media_id']
         thumb_id = request.args['thumb_id']
