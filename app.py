@@ -370,7 +370,7 @@ def tagging_by_article():
 
         result = tagging_utils.user_tagging_by_article(article_id=article_id, admin_id=admin_id, user_id=user_id,
                                                        reaction_type_weight=reaction_type_weight)
-        resp = make_response(json.dumps({'code': 0, 'result': result}), 200)
+        resp = make_response(json.dumps(result), 200)
     except Exception, e:
         print e
         resp = make_response(json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)}), 400)
@@ -388,7 +388,7 @@ def tagging_by_url():
 
         result = tagging_utils.user_tagging_by_url(article_url=article_url, admin_id=admin_id, user_id=user_id,
                                                    reaction_type_weight=reaction_type_weight)
-        resp = make_response(json.dumps({'code': 0, 'result': result}), 200)
+        resp = make_response(json.dumps(result), 200)
     except Exception, e:
         print e
         resp = make_response(json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)}), 400)

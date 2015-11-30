@@ -30,11 +30,11 @@ def wenzhi_analysis(content):
     }
     try:
         service = QcloudApi(module, config)
-        req_url = service.generateUrl(action, params)
+        # req_url = service.generateUrl(action, params)
         # print req_url
         # result_str = requests.get(req_url)
         result_str = service.call(action, params)
-        print result_str
+        # print result_str
         k = 0.001  # 平滑系数
         result = json.loads(result_str)
         prob_sum = 0
@@ -63,7 +63,8 @@ def remove_illegal_characters(raw_text):
             s.decode('utf8').encode('gbk')
             refined_content += s
         except UnicodeEncodeError:
-            print '%s error, illegal utf8 ch' % s
+            # print '%s error, illegal utf8 ch' % s
+            pass
     return refined_content
 
 

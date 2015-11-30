@@ -260,7 +260,7 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight,
                 user_atag_vec[a_tag_key] = weight * article.a_tags[a_tag_key]
     except DAO_utils.DAOException, de:
         print de
-        return {'msg': 'error, details=%s' % de}
+        return {'code': 1, 'msg': 'error, details=%s' % de}
         # continue  # 没有该文章在数据库中，则跳过
 
     # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
@@ -284,14 +284,15 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight,
         # DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
     except DAO_utils.DAOException, de:
         print de
-        return {'msg': 'error, update user info failed, details=%s' % de}
+        return {'code': 1, 'msg': 'error, update user info failed, details=%s' % de}
 
         # continue  # 更新信息失败则跳过，这样该条reaction将不会被标注为checked
         # TODO（隐患：是否会出现长期遗留的问题reaction？）
 
     # process_count += 1
 
-    return {'code': 0, 'msg': 'ok', 'user_vec': inst_user.user_tag_score_vec}
+    return {'code': 0, 'msg': 'ok',
+            'result': {'user_id': user_id, 'admin_id': admin_id, 'user_vec': inst_user.user_tag_score_vec}}
 
 
 def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_u_tagmap=None):
@@ -330,7 +331,7 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
                 user_atag_vec[a_tag_key] = weight * a_tag['conf']
     except DAO_utils.DAOException, de:
         print de
-        return {'msg': 'error, details=%s' % de}
+        return {'code': 1, 'msg': 'error, details=%s' % de}
         # continue  # 没有该文章在数据库中，则跳过
 
     # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
@@ -354,11 +355,12 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
         # DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
     except DAO_utils.DAOException, de:
         print de
-        return {'msg': 'error, update user info failed, details=%s' % de}
+        return {'code': 1, 'msg': 'error, update user info failed, details=%s' % de}
 
         # continue  # 更新信息失败则跳过，这样该条reaction将不会被标注为checked
         # TODO（隐患：是否会出现长期遗留的问题reaction？）
 
     # process_count += 1
 
-    return {'code': 0, 'msg': 'ok', 'user_vec': inst_user.user_tag_score_vec}
+    return {'code': 0, 'msg': 'ok',
+            'result': {'user_id': user_id, 'admin_id': admin_id, 'user_vec': inst_user.user_tag_score_vec}}
