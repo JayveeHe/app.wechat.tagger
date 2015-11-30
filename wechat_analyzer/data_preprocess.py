@@ -10,6 +10,7 @@ import datetime
 from urllib import urlencode
 import urllib2
 from gensim_utils import lda_utils
+from tencent_qcloud_classifier import wenzhi_utils
 from wechat_analyzer import tagging_utils
 import wechat_analyzer
 from wechat_analyzer.tagging_utils import passage_first_level_classify, passage_second_level_classify
@@ -90,10 +91,14 @@ def tencent_classify_rawtext_files(files_root_path, result_path, pass_num=-1):
         count += 1
         if count < pass_num:
             continue
-        ftext = codecs.open(os.path.join(files_root_path, f), 'r', encoding='utf-8').read()
+        ftext = codecs.open(os.path.join(files_root_path, f), 'r', encoding='utf8').read()
         try:
             # json_obj = json.loads(ftext)
-            result = tencent_classify(ftext)
+            ftext = ftext.replace('\n', '')
+            ftext = ftext.replace(' ', '')
+            refined_text = wenzhi_utils.remove_illegal_characters(ftext)
+            result = wenzhi_utils.wenzhi_analysis(refined_text)
+            # result = tencent_classify(ftext)
         except Exception, e:  # 懒得差各种异常了，直接重复
             print e
             continue
@@ -109,7 +114,7 @@ def tencent_classify_rawtext_files(files_root_path, result_path, pass_num=-1):
                     except KeyError, ke:
                         print ke
                         continue
-                    fout.write(ftext)
+                    fout.write(refined_text)
         else:
             print result
         time.sleep(random.random() * 3 + 0.2)
@@ -243,7 +248,7 @@ def tencent_classify(content):
 if __name__ == '__main__':
     # classify_text_files(u'../wechat_crawler/crawl_data/大象公会', './wechat_data/daxiang_result')
 
-    tencent_classify(u'''在曼彻斯特高级杯的决赛中，强大的曼联4:0轻松战胜博尔顿。开场仅仅2分钟，W基恩就打进一球。基恩伤愈后已经在三场比赛打进了四粒进球。下半场刚刚开始，贾努扎伊和扎哈的进球就帮助球队3:0领先。第87分钟，科尔也取得了进球。强大的曼联完全主宰了本场比赛。\n''')
+    # tencent_classify(u'''在曼彻斯特高级杯的决赛中，强大的曼联4:0轻松战胜博尔顿。开场仅仅2分钟，W基恩就打进一球。基恩伤愈后已经在三场比赛打进了四粒进球。下半场刚刚开始，贾努扎伊和扎哈的进球就帮助球队3:0领先。第87分钟，科尔也取得了进球。强大的曼联完全主宰了本场比赛。\n''')
     tencent_classify_rawtext_files(u'/Users/jayvee/weixin_article/articles/',
                                    '/Users/jayvee/weixin_article/tencent_classified', -1)
 
