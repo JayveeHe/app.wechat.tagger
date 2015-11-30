@@ -24,8 +24,9 @@ def wenzhi_analysis(content):
         'secretKey': 'oUEND16w54I8i6uragtks71EFK70hg8a',
         'method': 'post'
     }
+    refined_content = remove_illegal_characters(content)
     params = {
-        'content': content
+        'content': refined_content, 'query_encode': 0
     }
     try:
         service = QcloudApi(module, config)
@@ -34,7 +35,14 @@ def wenzhi_analysis(content):
         # result_str = requests.get(req_url)
         result_str = service.call(action, params)
         print result_str
+        k = 0.001  # 平滑系数
         result = json.loads(result_str)
+        prob_sum = 0
+        if result['code'] == 0:
+            for item in result['classes']:
+                prob_sum += item['conf'] + k
+            for item in result['classes']:
+                item['conf'] = (item['conf'] + k) / prob_sum
         return result
     except Exception, e:
         print e
@@ -43,8 +51,20 @@ def wenzhi_analysis(content):
 def wenzhi_analyse_url(text_url):
     ext = Extractor(url=text_url, blockSize=5,
                     image=False)
-    content = ext.getContext().decode('utf8').strip()
+    content = ext.getContext().decode('utf-8')
     return wenzhi_analysis(content)
+
+
+def remove_illegal_characters(raw_text):
+    # 去除非法字符
+    refined_content = ''
+    for s in raw_text:
+        try:
+            s.decode('utf8').encode('gbk')
+            refined_content += s
+        except UnicodeEncodeError:
+            print '%s error, illegal utf8 ch' % s
+    return refined_content
 
 
 if __name__ == '__main__':

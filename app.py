@@ -354,6 +354,7 @@ def analyse_artivle_url():
         return json.dumps({'code': 0, 'tag_result': tag_result}, ensure_ascii=False)
     except Exception, e:
         print e
+        # print result
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
 
 

@@ -53,7 +53,7 @@ class QcloudApi:
             from modules.market import Market
             service = Market(config)
         else:
-            raise ValueError , 'module not exists'
+            raise ValueError, 'module not exists'
 
         return service
 
@@ -84,6 +84,7 @@ class QcloudApi:
 
         return service.call(action, params)
 
+
 def main():
     module = 'cdn'
     action = 'UploadCdnEntity'
@@ -100,6 +101,7 @@ def main():
     service = QcloudApi(module, config)
     print ('URL:\n' + service.generateUrl(action, params))
     print (service.call(action, params))
+
 
 if (__name__ == '__main__'):
     main()
