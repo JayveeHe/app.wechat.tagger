@@ -164,7 +164,7 @@ def mongo_insert_user(inst_user, user_db=u_db, is_overwrite=False):
     """
     user = {'user_id': inst_user.user_id, 'user_name': inst_user.user_name, 'article_vec': inst_user.user_atag_vec,
             'user_tag_vec': inst_user.user_tag_score_vec, 'admin_id': inst_user.admin_id}
-    if not user_db.find_one({'user_id': inst_user.user_id}):
+    if not user_db.find_one({'user_id': inst_user.user_id, 'admin_id': inst_user.admin_id}):
         user_db.insert(user)
     elif is_overwrite:
         user_db.update_one({'user_id': inst_user.user_id}, {'$set': user})
@@ -187,7 +187,7 @@ def mongo_get_user(user_id, admin_id=None, user_db=u_db):
         find_result = u_db.find_one({'user_id': user_id})
     if find_result:
         user = WechatUser(user_id=user_id, user_name=find_result['user_name'], user_atag_vec=find_result['article_vec'],
-                          user_tag_score_vec=find_result['user_tag_vec'],admin_id=find_result['admin_id'])
+                          user_tag_score_vec=find_result['user_tag_vec'], admin_id=find_result['admin_id'])
         return user
     else:
         raise DAOException({'code': 1, 'msg': 'user not found.'})
