@@ -117,14 +117,15 @@ conf_db = wechat_analysis_collection['Configs']
 # todo add logging system
 # TODO try/except
 
-def mongo_insert_article(inst_article, article_db=a_db, is_overwrite=False):
+def mongo_insert_article(inst_article, admin_id, article_db=a_db, is_overwrite=False):
     """
     直接连接mongo数据库，插入文章数据
     :param inst_article: Article实例
     :return:
     """
 
-    article = {'title': inst_article.a_title, 'article_id': inst_article.a_id, 'tags': inst_article.a_tags,
+    article = {'admin_id': admin_id, 'title': inst_article.a_title, 'article_id': inst_article.a_id,
+               'tags': inst_article.a_tags,
                'content': inst_article.a_content, 'post_date': inst_article.post_date,
                'post_user': inst_article.post_user, 'article_url': inst_article.a_url}
     if not article_db.find_one({'article_id': inst_article.a_id}):
@@ -132,8 +133,8 @@ def mongo_insert_article(inst_article, article_db=a_db, is_overwrite=False):
     elif is_overwrite:
         article_db.update_one({'article_id': inst_article.a_id}, {'$set': article})
     else:
-        raise DAOException({'code': 1, 'msg': 'article already existed!'})
         print 'article already existed!'
+        raise DAOException({'code': 1, 'msg': 'article already existed!'})
 
 
 def mongo_get_article(a_id, article_db=a_db):
@@ -150,8 +151,8 @@ def mongo_get_article(a_id, article_db=a_db):
                           a_url=find_result['article_url'])
         return article
     else:
-        raise DAOException({'code': 1, 'msg': 'article not found.'})
         print 'article not found.'
+        raise DAOException({'code': 1, 'msg': 'article not found.'})
 
 
 def mongo_insert_user(inst_user, user_db=u_db, is_overwrite=False):
@@ -168,8 +169,8 @@ def mongo_insert_user(inst_user, user_db=u_db, is_overwrite=False):
     elif is_overwrite:
         user_db.update_one({'user_id': inst_user.user_id}, {'$set': user})
     else:
-        raise DAOException({'code': 1, 'msg': 'user already existed!'})
         print 'user already existed!'
+        raise DAOException({'code': 1, 'msg': 'user already existed!'})
         # user_db.save()
 
 

@@ -6,6 +6,7 @@ import re
 import sys
 import datetime
 import time
+from urllib import urlencode
 
 from flask import Flask, request, make_response, render_template, redirect
 from flask.ext.cors import cross_origin
@@ -15,7 +16,9 @@ import numpy as np
 from sklearn.externals import joblib
 
 from passage_classifier.vector_builder import VectorBuilder
+from tencent_qcloud_classifier import wenzhi_utils
 from wechat_analyzer import tagging_utils, DAO_utils
+from wechat_analyzer.content_extractor import Extractor
 from wechat_analyzer.web_content_extractor import get_content
 
 # todo demo only
@@ -198,6 +201,7 @@ def post_article():
         media_id = jdata['media_id']
         items = jdata['items']
         update_time = jdata['update_time']
+        # admin_id = jdata['admin_id']
         for item in items:
             article_title = item['article_title']
             article_content = item['article_content']
@@ -308,6 +312,46 @@ def get_all_taglist():
         taglist = DAO_utils.mongo_get_all_taglist()
         return json.dumps({'code': 0, 'tagList': taglist}, ensure_ascii=False)
 
+    except Exception, e:
+        print e
+        return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
+
+
+@app.route('/api/v1/analyse_article', methods=['POST'])
+def analyzse_article():
+    """
+    抽离文章分析接口
+    :return:
+    """
+    req_data = json.loads(request.data)
+    article_content = req_data.get('article_content')
+    result = wenzhi_utils.wenzhi_analysis(article_content)
+    # topic_list = tagging_utils.passage_second_level_classify(web_content)
+    tag_result = []
+    if result['code'] == 0:
+        for class_item in result['classes']:
+            class_type = class_item['class']
+            class_prob = class_item['conf']
+            tag_result.append({'tag': class_type, 'prob': class_prob})
+    return json.dumps({'code': 0, 'tag_result': tag_result}, ensure_ascii=False)
+    # return resp
+
+
+@app.route('/api/v1/analyse_url', methods=['POST'])
+def analyse_artivle_url():
+    try:
+        req_data = json.loads(request.data)
+        url = req_data['url']
+        # user_id = req_data['openid']
+        result = wenzhi_utils.wenzhi_analyse_url(url)
+        # topic_list = tagging_utils.passage_second_level_classify(web_content)
+        tag_result = []
+        if result['code'] == 0:
+            for class_item in result['classes']:
+                class_type = class_item['class']
+                class_prob = class_item['conf']
+                tag_result.append({'tag': class_type, 'prob': class_prob})
+        return json.dumps({'code': 0, 'tag_result': tag_result}, ensure_ascii=False)
     except Exception, e:
         print e
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
