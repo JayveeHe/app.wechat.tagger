@@ -6,7 +6,7 @@ __author__ = 'jayvee'
 
 class WechatUser:
     def __init__(self, user_id, user_name='', user_atag_vec={},
-                 reaction_type_weight=None, user_tag_score_vec=None):
+                 reaction_type_weight=None, user_tag_score_vec=None, admin_id=''):
         """
         init wechat user
         :param user_id: 用户id
@@ -28,5 +28,6 @@ class WechatUser:
             self.user_name = user_name
             self.user_atag_vec = user_atag_vec  # 用户的文章tag交互向量
             self.user_tag_score_vec = user_tag_score_vec
+            self.admin_id = admin_id
         else:
             raise TypeError

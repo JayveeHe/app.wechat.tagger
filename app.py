@@ -324,6 +324,7 @@ def analyzse_article():
     :return:
     """
     req_data = json.loads(request.data)
+    content_list = req_data.get('article_content')
     article_content = req_data.get('article_content')
     result = wenzhi_utils.wenzhi_analysis(article_content)
     # topic_list = tagging_utils.passage_second_level_classify(web_content)
@@ -356,6 +357,42 @@ def analyse_artivle_url():
         print e
         # print result
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
+
+
+@app.route('/api/v1/tagging/article_id')
+def tagging_by_article():
+    try:
+        req_data = json.loads(request.data)
+        user_id = req_data['user_id']
+        admin_id = req_data['admin_id']
+        article_id = req_data['article_id']
+        reaction_type_weight = DAO_utils.mongo_get_reaction_type_weight()
+
+        result = tagging_utils.user_tagging_by_article(article_id=article_id, admin_id=admin_id, user_id=user_id,
+                                                       reaction_type_weight=reaction_type_weight)
+        resp = make_response(json.dumps({'code': 0, 'result': result}), 200)
+    except Exception, e:
+        print e
+        resp = make_response(json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)}), 400)
+    return resp
+
+
+@app.route('/api/v1/tagging/article_url', methods=['POST'])
+def tagging_by_url():
+    try:
+        req_data = json.loads(request.data)
+        user_id = req_data['user_id']
+        admin_id = req_data['admin_id']
+        article_url = req_data['article_url']
+        reaction_type_weight = DAO_utils.mongo_get_reaction_type_weight()
+
+        result = tagging_utils.user_tagging_by_url(article_url=article_url, admin_id=admin_id, user_id=user_id,
+                                                   reaction_type_weight=reaction_type_weight)
+        resp = make_response(json.dumps({'code': 0, 'result': result}), 200)
+    except Exception, e:
+        print e
+        resp = make_response(json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)}), 400)
+    return resp
 
 
 if __name__ == '__main__':
