@@ -299,17 +299,18 @@ def get_openidlist_by_tag():
     try:
         req_data = json.loads(request.data)
         taglist = req_data['tagList']
-        openid_list = DAO_utils.mongo_get_openid_by_tags(taglist)
+        admin_id = req_data['admin_id']
+        openid_list = DAO_utils.mongo_get_openid_by_tags(admin_id, taglist)
         return json.dumps({'code': 0, 'openid_list': openid_list})
     except Exception, e:
         print e
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
 
 
-@app.route('/api/v1/taglist', methods=['GET'])
-def get_all_taglist():
+@app.route('/api/v1/taglist/<admin_id>', methods=['GET'])
+def get_all_taglist(admin_id):
     try:
-        taglist = DAO_utils.mongo_get_all_taglist()
+        taglist = DAO_utils.mongo_get_all_taglist(admin_id)
         return json.dumps({'code': 0, 'tagList': taglist}, ensure_ascii=False)
 
     except Exception, e:
@@ -361,13 +362,14 @@ def analyse_artivle_url():
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
 
 
-@app.route('/api/v1/tagging/article_id',methods=['POST'])
+@app.route('/api/v1/tagging/article_id', methods=['POST'])
 def tagging_by_article():
     """
     发表新文章后，首先调用该函数进行文章分析和数据库存入；使用LDA进行tag
     :return:
     """
     try:
+        print 'receiving tagging req from %s, data=%s' % (request.remote_addr, request.data)
         req_data = json.loads(request.data)
         user_id = req_data['user_id']
         admin_id = req_data['admin_id']

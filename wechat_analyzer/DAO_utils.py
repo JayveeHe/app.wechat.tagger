@@ -284,12 +284,12 @@ def mongo_set_conf(config_name, config_value, config_db=conf_db, is_overwrite=Fa
     return 0
 
 
-def mongo_get_openid_by_tags(tags, user_db=u_db):
+def mongo_get_openid_by_tags(admin_id, tags, user_db=u_db):
     openid_list = set()
     conditions = []
     for tag in tags:
         conditions.append('user_tag_vec.%s' % tag)
-    find_filter = {}
+    find_filter = {'admin_id': admin_id}
     for condition in conditions:
         find_filter[condition] = {'$exists': True}
     if tags:
@@ -299,13 +299,20 @@ def mongo_get_openid_by_tags(tags, user_db=u_db):
     return list(openid_list)
 
 
-def mongo_get_all_taglist(config_db=conf_db):
-    find_result = config_db.find_one({'name': 'a_u_tagmap'})
-    taglist = set()
-    for atag in find_result['value']:
-        for utag in find_result['value'][atag]:
-            taglist.add(utag)
-    return list(taglist)
+def mongo_get_all_taglist(admin_id, config_db=conf_db):
+    find_result = config_db.find_one({'name': 'taglist', 'admin_id': admin_id})
+    if find_result:
+        return find_result.get('value')
+    else:
+        return []
+
+
+def mongo_update_taglist(admin_id, taglist, config_db=conf_db):
+    find_result = config_db.find_one({'name': 'taglist', 'admin_id': admin_id})
+    if find_result:
+        config_db.update({'name': 'taglist', 'admin_id': admin_id}, {"$set": {"value": taglist}})
+    else:
+        config_db.insert({'name': 'taglist', 'admin_id': admin_id, 'value': taglist})
 
 
 if __name__ == '__main__':

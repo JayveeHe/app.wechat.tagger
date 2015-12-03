@@ -271,9 +271,12 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight=
 
     # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
     # TODO 更好的权值赋值公式
+    admin_taglist = DAO_utils.mongo_get_all_taglist(admin_id)
+    admin_tagset = set(admin_taglist)
     for a_tag_key in user_atag_vec.keys():
         if a_u_tagmap:  # 如果有article-user-tagmap则进行映射
             for u_tag_key in a_u_tagmap[a_tag_key]:
+                admin_tagset.add(u_tag_key)
                 if u_tag_key in user_tag_score_vec:  # TODO 是否需要每次都加？
                     user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
                         a_tag_key]
@@ -283,6 +286,10 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight=
         else:
             # 如果没有，则直接使用文章的tag进行1:1映射
             inst_user.user_tag_score_vec = user_atag_vec
+            for u_tag_key in user_atag_vec:
+                admin_tagset.add(u_tag_key)
+    # 保存taglist
+    DAO_utils.mongo_update_taglist(admin_id, list(admin_tagset))
     # 保存用户信息
     try:
         DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
@@ -342,9 +349,12 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
 
     # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
     # TODO 更好的权值赋值公式
+    admin_taglist = DAO_utils.mongo_get_all_taglist(admin_id)
+    admin_tagset = set(admin_taglist)
     for a_tag_key in user_atag_vec.keys():
         if a_u_tagmap:  # 如果有article-user-tagmap则进行映射
             for u_tag_key in a_u_tagmap[a_tag_key]:
+                admin_tagset.add(u_tag_key)
                 if u_tag_key in user_tag_score_vec:  # TODO 是否需要每次都加？
                     user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
                         a_tag_key]
@@ -354,6 +364,10 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
         else:
             # 如果没有，则直接使用文章的tag进行1:1映射
             inst_user.user_tag_score_vec = user_atag_vec
+            for u_tag_key in user_atag_vec:
+                admin_tagset.add(u_tag_key)
+    # 保存taglist
+    DAO_utils.mongo_update_taglist(admin_id, list(admin_tagset))
     # 保存用户信息
     try:
         DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
@@ -373,4 +387,4 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
 
 
 if __name__ == '__main__':
-    print user_tagging_by_article('565e6511e025b1b47c626c74', 'testuser3', 'testadmin3', '')
+    print user_tagging_by_article('565e6511e025b1b47c626c74', '565ff6f1996597c15c75fd8f', '565bc94ca71ecdb71b8fbe95')
