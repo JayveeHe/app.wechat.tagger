@@ -227,7 +227,7 @@ def user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_tagmap
     return process_count
 
 
-def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight, a_u_tagmap=None):
+def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight=None, a_u_tagmap=None):
     """
     根据单篇文章id来给用户打tags
     :param article_id:
@@ -239,6 +239,7 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight,
     # reaction_id = reaction.reaction_id
     a_id = article_id
     reaction_type = 'read'
+    # TODO validate admin_id first
     try:
         inst_user = DAO_utils.mongo_get_user(user_id, admin_id)
     except DAO_utils.DAOException, de:
@@ -246,18 +247,23 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight,
         # 数据库中不存在该用户，则新建一个
         inst_user = WechatUser(user_id=user_id, admin_id=admin_id)
         DAO_utils.mongo_insert_user(inst_user)
-
     user_atag_vec = inst_user.user_atag_vec
     user_tag_score_vec = inst_user.user_tag_score_vec
-
+    if not reaction_type_weight:
+        reaction_type_weight = {
+            "read": 0.5,
+            "favor": 1.8000000000000000444,
+            "repost": 3.0
+        }
     weight = reaction_type_weight[reaction_type]
     try:
-        article = DAO_utils.mongo_get_article(a_id)
-        for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
+        article = DAO_utils.mongo_get_article(a_id, article_db=DAO_utils.wnews_db)
+        for a_tag_item in article.a_tags:  # 文章的tags应该是一个dict
+            a_tag_key = a_tag_item.get('tag')
             if a_tag_key in user_atag_vec:
-                user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
+                user_atag_vec[a_tag_key] += weight * a_tag_item.get('prob')
             else:
-                user_atag_vec[a_tag_key] = weight * article.a_tags[a_tag_key]
+                user_atag_vec[a_tag_key] = weight * a_tag_item.get('prob')
     except DAO_utils.DAOException, de:
         print de
         return {'code': 1, 'msg': 'error, details=%s' % de}
@@ -364,3 +370,7 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
 
     return {'code': 0, 'msg': 'ok',
             'result': {'user_id': user_id, 'admin_id': admin_id, 'user_vec': inst_user.user_tag_score_vec}}
+
+
+if __name__ == '__main__':
+    print user_tagging_by_article('565e6511e025b1b47c626c74', 'testuser3', 'testadmin3', '')

@@ -2,6 +2,8 @@
 import os
 import time
 import sys
+import datetime
+from bson import ObjectId
 from wechat_analyzer.basic_class.Article import Article
 from wechat_analyzer.basic_class.Reaction import Reaction
 from wechat_analyzer.basic_class.WechatUser import WechatUser
@@ -109,6 +111,7 @@ import pymongo
 client = pymongo.MongoClient('112.126.80.78', 27017)
 wechat_analysis_collection = client['wechat_analysis']
 a_db = wechat_analysis_collection['Articles']
+wnews_db = wechat_analysis_collection.get_collection('webpage_weixin_news')
 u_db = wechat_analysis_collection['Users']
 re_db = wechat_analysis_collection['Reactions']
 conf_db = wechat_analysis_collection['Configs']
@@ -144,12 +147,14 @@ def mongo_get_article(a_id, article_db=a_db):
     :return:
     """
 
-    find_result = article_db.find_one({'article_id': a_id})
+    find_result = article_db.find_one({'_id': ObjectId(a_id)})
     if find_result:
-        article = Article(a_id, a_title=find_result['title'], post_user=find_result['post_user'],
-                          a_tags=find_result['tags'], post_date=find_result['post_date'],
-                          a_url=find_result['article_url'])
+        article = Article(a_id, a_title=find_result['title'], post_user=find_result['author'],
+                          a_tags=find_result['tags'],
+                          post_date=datetime.datetime.fromtimestamp(float(find_result['update_time'])),
+                          a_url=find_result['url'])
         return article
+
     else:
         print 'article not found.'
         raise DAOException({'code': 1, 'msg': 'article not found.'})

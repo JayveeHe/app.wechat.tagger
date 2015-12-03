@@ -193,7 +193,7 @@ def record_reactions():
 @app.route('/api/v1/article', methods=['POST'])
 def post_article():
     """
-    发表新文章后，首先调用该函数进行文章分析和数据库存入
+    发表新文章后，首先调用该函数进行文章分析和数据库存入；使用LDA进行tag
     :return:
     """
     try:
@@ -323,8 +323,10 @@ def analyzse_article():
     抽离文章分析接口
     :return:
     """
-    req_data = json.loads(request.data)
-    content_list = req_data.get('article_content')
+    raw_text = request.data
+    raw_text = raw_text.replace('\n', '')
+    req_data = json.loads(raw_text)
+    # content_list = req_data.get('article_content')
     article_content = req_data.get('article_content')
     result = wenzhi_utils.wenzhi_analysis(article_content)
     # topic_list = tagging_utils.passage_second_level_classify(web_content)
@@ -359,8 +361,12 @@ def analyse_artivle_url():
         return json.dumps({'code': 1, 'msg': 'unknown error, details = %s' % str(e)})
 
 
-@app.route('/api/v1/tagging/article_id')
+@app.route('/api/v1/tagging/article_id',methods=['POST'])
 def tagging_by_article():
+    """
+    发表新文章后，首先调用该函数进行文章分析和数据库存入；使用LDA进行tag
+    :return:
+    """
     try:
         req_data = json.loads(request.data)
         user_id = req_data['user_id']

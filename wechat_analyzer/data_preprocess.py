@@ -9,6 +9,7 @@ import time
 import datetime
 from urllib import urlencode
 import urllib2
+import gevent
 from gensim_utils import lda_utils
 from tencent_qcloud_classifier import wenzhi_utils
 from wechat_analyzer import tagging_utils
@@ -83,26 +84,72 @@ def classify_rawtext_files(files_root_path, result_path, pass_num=-1):
 
 
 def tencent_classify_rawtext_files(files_root_path, result_path, pass_num=-1):
+    # 内部函数，用于gevent
+    # def wenzhi_process(root_path, filename, re_path):
+    #     result = {}
+    #     refined_text = ''
+    #     try:
+    #         ftext = codecs.open(os.path.join(root_path, f), 'r', encoding='utf8').read()
+    #         # json_obj = json.loads(ftext)
+    #         ftext = ftext.replace('\n', '')
+    #         ftext = ftext.replace(' ', '')
+    #
+    #         refined_text = wenzhi_utils.remove_illegal_characters(ftext)
+    #         result = wenzhi_utils.wenzhi_analysis(refined_text)
+    #
+    #         # result = tencent_classify(ftext)
+    #     except Exception, e:  # 懒得差各种异常了，跳过该质量不好的文本
+    #         print e
+    #     if result.get('code') == 0:
+    #         for class_type in result['classes']:
+    #             if class_type['conf'] > 0.2:
+    #                 try:
+    #                     fout = codecs.open(os.path.join(re_path, class_type['class'], f + '.txt'), 'w')
+    #                 except IOError, e:
+    #                     print e
+    #                     os.mkdir(os.path.join(re_path, class_type['class']))
+    #                     fout = codecs.open(os.path.join(re_path, class_type['class'], f + ".txt"), 'w')
+    #                 except KeyError, ke:
+    #                     print ke
+    #                     return
+    #                     # continue
+    #                 if len(refined_text) > 0:
+    #                     fout.write(refined_text)
+    #                     print '%s written to %s' % (filename, fout)
+    #     else:
+    #         print result
+    #     time.sleep(random.random() * 3 + 0.2)
+
+    # 本函数的本体
     count = 0
     flist = os.listdir(files_root_path)
+    task_list = []
+    window = 10
     for f in flist:
-
         print '%s:%s' % (count, f)
         count += 1
         if count < pass_num:
             continue
-        ftext = codecs.open(os.path.join(files_root_path, f), 'r', encoding='utf8').read()
+        # task_list.append(gevent.spawn(wenzhi_process, files_root_path, f, result_path))
+        # if count % window == 0:
+        #     print 'start process %s'
+        #     gevent.joinall(task_list)
+        #     task_list = []
+        #     print 'end'
         try:
+            ftext = codecs.open(os.path.join(files_root_path, f), 'r', encoding='utf8').read()
             # json_obj = json.loads(ftext)
             ftext = ftext.replace('\n', '')
             ftext = ftext.replace(' ', '')
+
             refined_text = wenzhi_utils.remove_illegal_characters(ftext)
             result = wenzhi_utils.wenzhi_analysis(refined_text)
+
             # result = tencent_classify(ftext)
-        except Exception, e:  # 懒得差各种异常了，直接重复
+        except Exception, e:  # 懒得差各种异常了，跳过该质量不好的文本
             print e
             continue
-        if result['code'] == 0:
+        if result and result.get('code') == 0:
             for class_type in result['classes']:
                 if class_type['conf'] > 0.5:
                     try:
@@ -117,7 +164,8 @@ def tencent_classify_rawtext_files(files_root_path, result_path, pass_num=-1):
                     fout.write(refined_text)
         else:
             print result
-        time.sleep(random.random() * 3 + 0.2)
+        time.sleep(random.random() * 1 + 0.2)
+
     print 'done'
 
 
@@ -250,7 +298,7 @@ if __name__ == '__main__':
 
     # tencent_classify(u'''在曼彻斯特高级杯的决赛中，强大的曼联4:0轻松战胜博尔顿。开场仅仅2分钟，W基恩就打进一球。基恩伤愈后已经在三场比赛打进了四粒进球。下半场刚刚开始，贾努扎伊和扎哈的进球就帮助球队3:0领先。第87分钟，科尔也取得了进球。强大的曼联完全主宰了本场比赛。\n''')
     tencent_classify_rawtext_files(u'/Users/jayvee/weixin_article/articles/',
-                                   '/Users/jayvee/weixin_article/tencent_classified', -1)
+                                   '/Users/jayvee/weixin_article/tencent_classified', 2479)
 
     # 生成lda模型
     # class_type = '财经'
