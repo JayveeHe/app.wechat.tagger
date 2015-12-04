@@ -403,5 +403,10 @@ def tagging_by_url():
     return resp
 
 
+@app.route('/show', methods=['GET'])
+def show_iframe():
+    return render_template('iframe.html')
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=1234, debug=True)
