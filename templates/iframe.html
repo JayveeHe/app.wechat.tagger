@@ -3,13 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <title>测试iframe</title>
+    <script src="../static/js/jquery-2.1.4.js"></script>
 </head>
 <body>
-<div>下面是iframe内容</div>
+<div id="info">下面是iframe内容</div>
 <script>
-    window.onload = function () {
-        window.open("https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx77081de86b8e6232&redirect_uri=http%3A%2F%2Fapi.trysenz.com%2Fwechat_auth%2F%3FsendType%3Dpush%26wnews_id%3D566d229acda061cc4de3e923%26admin_id%3D565bc94fa71ecdb71b8fbe96&response_type=code&scope=snsapi_base&state=123&connect_redirect=1#wechat_redirect")
-    }
+    //window.onload = function () {
+    //    window.open("https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx77081de86b8e6232&redirect_uri=http%3A%2F%2Fapi.trysenz.com%2Fwechat_auth%2F%3FsendType%3Dpush%26wnews_id%3D566d229acda061cc4de3e923%26admin_id%3D565bc94fa71ecdb71b8fbe96&response_type=code&scope=snsapi_base&state=123&connect_redirect=1#wechat_redirect")
+    //}
+    var auth_url = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx77081de86b8e6232&redirect_uri=http%3A%2F%2Fapi.trysenz.com%2Fwechat_auth%2F%3FsendType%3Dpush%26wnews_id%3D566d229acda061cc4de3e923%26admin_id%3D565bc94fa71ecdb71b8fbe96&response_type=code&scope=snsapi_base&state=123&connect_redirect=1#wechat_redirect";
+
+    $.get(auth_url, function (data, status) {
+        $("#info").text('授权完毕')
+    })
+
 </script>
 <iframe src="http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=401150051&idx=1&sn=bf703d46d2293461f9fc821e3065b17d#rd"></iframe>
 </body>
