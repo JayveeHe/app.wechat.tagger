@@ -6,7 +6,7 @@ import re
 import sys
 import datetime
 import time
-from urllib import urlencode
+from bs4 import BeautifulSoup
 
 from flask import Flask, request, make_response, render_template, redirect
 from flask.ext.cors import cross_origin
@@ -329,7 +329,8 @@ def analyzse_article():
     req_data = json.loads(raw_text)
     # content_list = req_data.get('article_content')
     article_content = req_data.get('article_content')
-    result = wenzhi_utils.wenzhi_analysis(article_content)
+    soup = BeautifulSoup(article_content)
+    result = wenzhi_utils.wenzhi_analysis(soup.text)
     # topic_list = tagging_utils.passage_second_level_classify(web_content)
     tag_result = []
     if result['code'] == 0:
