@@ -4,13 +4,14 @@
     <meta charset="UTF-8">
     <title>测试iframe</title>
     <script src="//cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+    <script src="../static/js/reimg.js"></script>
+    <script src="../static/js/noref.js"></script>
+    <meta name="viewport"
+          content="width=device-width,height=device-height,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+
 </head>
 <body>
-<div id="info">下面是iframe内容</div>
 <script>
-    window.onload = function () {
-        window.open("https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx77081de86b8e6232&redirect_uri=http%3A%2F%2Fapi.trysenz.com%2Fwechat_auth%2F%3FsendType%3Dpush%26wnews_id%3D566d229acda061cc4de3e923%26admin_id%3D565bc94fa71ecdb71b8fbe96&response_type=code&scope=snsapi_base&state=123&connect_redirect=1#wechat_redirect")
-    }
     /**var auth_url = "https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx77081de86b8e6232&redirect_uri=http%3A%2F%2Fapi.trysenz.com%2Fwechat_auth%2F%3FsendType%3Dpush%26wnews_id%3D566d229acda061cc4de3e923%26admin_id%3D565bc94fa71ecdb71b8fbe96&response_type=code&scope=snsapi_base&state=123&connect_redirect=1#wechat_redirect";
 
      $.ajax({
@@ -24,7 +25,90 @@
         }
     });
      **/
+    var req_url = "";//这个是向我们的服务器询问该用户上一次请求的时间间隔是否小于某个值。服务器端使用session来管理用户记录
+                     //url中最好包含一个参数来指定文章的id，admin_id
+    //具体的req_url参数设置可以通过模板或者其他方法弄
+    /**$.ajax({
+        type: 'GET',
+        url: req_url,
+        success: function (data, status) {
+            var resp = JSON.parse(data);//返回的内容包括“请求间隔是否小于定值”、“原始文章的url”
+            //$("#info").text('授权完毕');
+            if (resp.code == 1) {// code=1表示请求间隔大于定值，可以重新授权
+                window.open("https://open.weixin.qq.com/connect/oauth2/authorize?appid=wx77081de86b8e6232&redirect_uri=http%3A%2F%2Fapi.trysenz.com%2Fwechat_auth%2F%3FsendType%3Dpush%26wnews_id%3D566d229acda061cc4de3e923%26admin_id%3D565bc94fa71ecdb71b8fbe96&response_type=code&scope=snsapi_base&state=123&connect_redirect=1#wechat_redirect")
+                //这里的授权页，回调的地址基本不用变。
+                // 主要变的是服务器那边，获取到code，用code拿用户的openid后，所做的那个跳转url。
+                // 让拿到openid后的跳转url指向本html的地址
+            } else {
+                //该用户上一次请求间隔小于定值，可以不用授权，直接在iframe中显示微信官方的图文页
+                $("body").append("<iframe src='" + resp.iframe_url + "'></iframe>");
+            }
+        }
+    });
+     **/
+
+    {#        $(document).ready(function () {#}
+    {#        var imgs = document.getElementsByTagName('img');#}
+    {#        var videos = document.getElementsByClassName('video_iframe');#}
+    {#    #}
+    {#        changeData(imgs, 'image');#}
+    {#        changeData(videos, 'video');#}
+    {##}
+    {#        });#}
+    function showImg(url) {
+        var imgid = Math.random(),
+                frameid = 'frameimg' + imgid;
+        window['img' + imgid] = '<img src=\'' + url + '?kilobug\' /><script>window.onload = function() { parent.document.getElementById(\'' + frameid + '\').height = document.getElementById(\'img\').height+\'px\'; }<' + '/script>';
+        document.write('<iframe src="javascript:parent[\'img' + imgid + '\'];" frameBorder="0" scrolling="no" width="100%"></iframe>');
+    }
+    function startChange() {
+        {#        var d = window.frames["test-iframe"].document;#}
+        {#        var ifr = document.getElementById("weixin_iframe");#}
+        //document.domain = 'qq.com'
+        {#        var ifr_imgs = ifr.contentWindow.document.getElementsByTagName('img');#}
+        console.log($(this));
+        var imgs = document.getElementsByTagName('img');
+        changeData(imgs, 'image');
+        {#        console.log(d);#}
+        {#        var ifr_imgs = d.getElementsByTagName('img');#}
+
+        {#        console.log(ifr_imgs);#}
+        {#        var ifr_videos = d.getElementsByClassName('video_iframe');#}
+        {#        changeData(ifr_imgs, 'image');#}
+        {#        changeData(ifr_videos, 'video');#}
+    }
+    {#    document.domain = 'qq.com';//设置成主域#}
+
+    window.onload = function () {
+        {#        console.log($(window.frames["test-iframe"]).html())#}
+        noref();
+        {#        document.domain = "qq.com";#}
+        {#        var d = window.frames["test-iframe"].document;#}
+        {#        var ifr = document.getElementById("weixin_iframe");#}
+        {#        //document.domain = 'qq.com'#}
+        var ifr_imgs = document.getElementsByTagName('img');
+        {#        console.log($(this));#}
+        {#        var ifr_imgs = d.getElementsByTagName('img');#}
+        {##}
+        console.log(ifr_imgs);
+        var ifr_videos = document.getElementsByClassName('video_iframe');
+        changeData(ifr_imgs, 'image');
+        changeData(ifr_videos, 'video');
+    }
 </script>
-<iframe src="http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=401150051&idx=1&sn=bf703d46d2293461f9fc821e3065b17d#rd"></iframe>
+{#<img src="http://mmbiz.qpic.cn/mmbiz/DVH5PicQqomiczJmylPABCo3Um9JHiaN20TDGibPTp6ibcdFgvEKqOdlVZCXVJycUc7tV1KrPX50ds9Xet9hbkibib1lw/0?wx_fmt=jpeg">#}
+<iframe id="weixin_iframe"
+        name="test-iframe"
+        frameborder="0"
+        style="width: 100%;height: 3000px;margin: 0px;border: 0px"
+        height="100%"
+        onload="javascript:startChange()"
+        src="http://mp.weixin.qq.com/s?__biz=MjM5NzAzMDU4MA==&mid=401296755&idx=4&sn=07f1a44abdd6c5cc4c0b45f3c007a53f&3rd=MzA3MDU4NTYzMw==&scene=6#rd"></iframe>
+{#<iframe#}
+{#        src="http://read.html5.qq.com/image?imageUrl=http://mmbiz.qpic.cn/mmbiz/DVH5PicQqomiczJmylPABCo3Um9JHiaN20TDGibPTp6ibcdFgvEKqOdlVZCXVJycUc7tV1KrPX50ds9Xet9hbkibib1lw/0?wx_fmt=jpeg"#}
+{#        onload="showImg('http://mmbiz.qpic.cn/mmbiz/SWL3EF8DbczAryEB8b3Vibfj0atiamgP8MjWhNibZ4Emg5HM2eOfIB1kHoJcfvztLJKss4xPldsMqkjkRl2fHztbA/640?wx_fmt=jpeg&wxfrom=5&wx_lazy=1')"#}
+{#        ></iframe>#}
+{#<img data-ratio="0.5619389587073609" data-s="300,640" data-type="jpeg" data-w="" style="width: 100%"#}
+{#     src="http://read.html5.qq.com/image?imageUrl=http://mmbiz.qpic.cn/mmbiz/x7VVb370T5QtTJnQQUnqD1pbhVGfR7IyzibOpoRMQx7qjNtFNxib89MoWLy1ut4dXKjxcp4r5ibWSQgjUUGnzA1xg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1">#}
 </body>
 </html>
