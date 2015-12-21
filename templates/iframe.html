@@ -87,6 +87,7 @@
         changeData(ifr_imgs, 'image');
         changeData(ifr_videos, 'video');
     }
+
 </script>
 <iframe id="weixin_iframe"
         name="test-iframe"
@@ -94,19 +95,12 @@
         style="width: 100%;height: 3000px;margin: 0px;border: 0px"
         height="100%"
         onload="javascript:startChange()"
+        src="
         {% if ifr_url %}
-        src="{{ iframe_url }}"
+        {{ ifr_url }}
         {% else %}
-        src="http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=401546523&idx=1&sn=b6ec8843c106a6bbbb5e505b196fc202#rd"
-        {% endif %}
+        http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=401546523&idx=1&sn=b6ec8843c106a6bbbb5e505b196fc202#rd
+        {% endif %}"
         ></iframe>
-<!--
-{#<iframe#}
-{#        src="http://read.html5.qq.com/image?imageUrl=http://mmbiz.qpic.cn/mmbiz/DVH5PicQqomiczJmylPABCo3Um9JHiaN20TDGibPTp6ibcdFgvEKqOdlVZCXVJycUc7tV1KrPX50ds9Xet9hbkibib1lw/0?wx_fmt=jpeg"#}
-{#        onload="showImg('http://mmbiz.qpic.cn/mmbiz/SWL3EF8DbczAryEB8b3Vibfj0atiamgP8MjWhNibZ4Emg5HM2eOfIB1kHoJcfvztLJKss4xPldsMqkjkRl2fHztbA/640?wx_fmt=jpeg&wxfrom=5&wx_lazy=1')"#}
-{#        ></iframe>#}
-{#<img data-ratio="0.5619389587073609" data-s="300,640" data-type="jpeg" data-w="" style="width: 100%"#}
-{#     src="http://read.html5.qq.com/image?imageUrl=http://mmbiz.qpic.cn/mmbiz/x7VVb370T5QtTJnQQUnqD1pbhVGfR7IyzibOpoRMQx7qjNtFNxib89MoWLy1ut4dXKjxcp4r5ibWSQgjUUGnzA1xg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1">#}
--->
 </body>
 </html>
