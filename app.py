@@ -406,7 +406,11 @@ def tagging_by_url():
 
 @app.route('/show', methods=['GET'])
 def show_iframe():
-    return render_template('iframe.html')
+    ifr_url = request.args.get('url')
+    if ifr_url:
+        return render_template('iframe.html', ifr_url=ifr_url)
+    else:
+        return render_template('iframe.html')
 
 
 if __name__ == '__main__':

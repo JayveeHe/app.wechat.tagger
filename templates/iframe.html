@@ -47,14 +47,6 @@
     });
      **/
 
-    {#        $(document).ready(function () {#}
-    {#        var imgs = document.getElementsByTagName('img');#}
-    {#        var videos = document.getElementsByClassName('video_iframe');#}
-    {#    #}
-    {#        changeData(imgs, 'image');#}
-    {#        changeData(videos, 'video');#}
-    {##}
-    {#        });#}
     function showImg(url) {
         var imgid = Math.random(),
                 frameid = 'frameimg' + imgid;
@@ -96,19 +88,25 @@
         changeData(ifr_videos, 'video');
     }
 </script>
-{#<img src="http://mmbiz.qpic.cn/mmbiz/DVH5PicQqomiczJmylPABCo3Um9JHiaN20TDGibPTp6ibcdFgvEKqOdlVZCXVJycUc7tV1KrPX50ds9Xet9hbkibib1lw/0?wx_fmt=jpeg">#}
 <iframe id="weixin_iframe"
         name="test-iframe"
         frameborder="0"
         style="width: 100%;height: 3000px;margin: 0px;border: 0px"
         height="100%"
         onload="javascript:startChange()"
-        src="http://mp.weixin.qq.com/s?__biz=MjM5NzAzMDU4MA==&mid=401296755&idx=4&sn=07f1a44abdd6c5cc4c0b45f3c007a53f&3rd=MzA3MDU4NTYzMw==&scene=6#rd"></iframe>
+        {% if ifr_url %}
+        src="{{ iframe_url }}"
+        {% else %}
+        src="http://mp.weixin.qq.com/s?__biz=MzI1NTAxMTQwNQ==&mid=401546523&idx=1&sn=b6ec8843c106a6bbbb5e505b196fc202#rd"
+        {% endif %}
+        ></iframe>
+<!--
 {#<iframe#}
 {#        src="http://read.html5.qq.com/image?imageUrl=http://mmbiz.qpic.cn/mmbiz/DVH5PicQqomiczJmylPABCo3Um9JHiaN20TDGibPTp6ibcdFgvEKqOdlVZCXVJycUc7tV1KrPX50ds9Xet9hbkibib1lw/0?wx_fmt=jpeg"#}
 {#        onload="showImg('http://mmbiz.qpic.cn/mmbiz/SWL3EF8DbczAryEB8b3Vibfj0atiamgP8MjWhNibZ4Emg5HM2eOfIB1kHoJcfvztLJKss4xPldsMqkjkRl2fHztbA/640?wx_fmt=jpeg&wxfrom=5&wx_lazy=1')"#}
 {#        ></iframe>#}
 {#<img data-ratio="0.5619389587073609" data-s="300,640" data-type="jpeg" data-w="" style="width: 100%"#}
 {#     src="http://read.html5.qq.com/image?imageUrl=http://mmbiz.qpic.cn/mmbiz/x7VVb370T5QtTJnQQUnqD1pbhVGfR7IyzibOpoRMQx7qjNtFNxib89MoWLy1ut4dXKjxcp4r5ibWSQgjUUGnzA1xg/640?wx_fmt=jpeg&tp=webp&wxfrom=5&wx_lazy=1">#}
+-->
 </body>
 </html>
