@@ -1,5 +1,5 @@
 # coding=utf-8
-from wechat_analyzer import DAO_utils
+from wechat_analyzer import dao_utils
 
 """
 用于设置和更新tag之间的映射权重
@@ -35,11 +35,11 @@ def update_a_u_map(reaction_list, a_u_map, insert_rate=0.001):
     for reaction in reaction_list:
         # process article tags
         reaction_a_id = reaction.reaction_a_id
-        article = DAO_utils.get_article_by_id(reaction_a_id)
+        article = dao_utils.get_article_by_id(reaction_a_id)
         article_tags = article.atags
         # get user tags
         reaction_user_id = reaction.reaction_user_id
-        user = DAO_utils.get_user_by_id(reaction_user_id)
+        user = dao_utils.get_user_by_id(reaction_user_id)
         utag_vec = user.user_tag_score_vec
 
         reaction_type = reaction.reaction_type
@@ -62,14 +62,14 @@ def update_a_u_map(reaction_list, a_u_map, insert_rate=0.001):
 
 def config_a_u_map(a_u_map):
     if type(a_u_map) is dict:
-        DAO_utils.mongo_set_conf('a_u_tagmap', a_u_map)
+        dao_utils.mongo_set_conf('a_u_tagmap', a_u_map)
     else:
         raise TypeError('a_u_map should be a dict!')
 
 
 def config_reaction_type_weight(reaction_type_weight):
     if type(reaction_type_weight) is dict:
-        DAO_utils.mongo_set_conf('reaction_type_weight', reaction_type_weight, is_overwrite=True)
+        dao_utils.mongo_set_conf('reaction_type_weight', reaction_type_weight, is_overwrite=True)
     else:
         raise TypeError('reaction_type_weight should be a dict!')
 

@@ -5,7 +5,7 @@ import gensim
 import requests
 import jieba.posseg as pseg
 import sys
-import DAO_utils
+import dao_utils
 from tencent_qcloud_classifier import wenzhi_utils
 from wechat_analyzer.basic_class.WechatUser import WechatUser
 
@@ -47,11 +47,11 @@ def update_a_u_map(reaction_list, a_u_map, insert_rate=0.001):
     for reaction in reaction_list:
         # process article tags
         reaction_a_id = reaction.reaction_a_id
-        article = DAO_utils.get_article_by_id(reaction_a_id)
+        article = dao_utils.get_article_by_id(reaction_a_id)
         article_tags = article.atags
         # get user tags
         reaction_user_id = reaction.reaction_user_id
-        user = DAO_utils.get_user_by_id(reaction_user_id)
+        user = dao_utils.get_user_by_id(reaction_user_id)
         utag_vec = user.user_tag_score_vec
 
         reaction_type = reaction.reaction_type
@@ -145,7 +145,7 @@ def user_tagging(inst_user, reaction_list, reaction_type_weight, a_u_tagmap):
         weight = reaction_type_weight[reaction.reaction_type]
         a_id = reaction.reaction_a_id
         # todo a_map just for demo
-        article = DAO_utils.get_article_by_id(a_id)
+        article = dao_utils.get_article_by_id(a_id)
         for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
             if a_tag_key in user_atag_vec:
                 user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
@@ -181,25 +181,25 @@ def user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_tagmap
         a_id = reaction.reaction_a_id
         reaction_type = reaction.reaction_type
         try:
-            inst_user = DAO_utils.mongo_get_user(user_id)
-        except DAO_utils.DAOException, de:
+            inst_user = dao_utils.mongo_get_user(user_id)
+        except dao_utils.DAOException, de:
             print de
             # 数据库中不存在该用户，则新建一个
             inst_user = WechatUser(user_id=user_id)
-            DAO_utils.mongo_insert_user(inst_user)
+            dao_utils.mongo_insert_user(inst_user)
 
         user_atag_vec = inst_user.user_atag_vec
         user_tag_score_vec = inst_user.user_tag_score_vec
 
         weight = reaction_type_weight[reaction_type]
         try:
-            article = DAO_utils.mongo_get_article(a_id)
+            article = dao_utils.mongo_get_article(a_id)
             for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
                 if a_tag_key in user_atag_vec:
                     user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
                 else:
                     user_atag_vec[a_tag_key] = weight * article.a_tags[a_tag_key]
-        except DAO_utils.DAOException, de:
+        except dao_utils.DAOException, de:
             print de
             continue  # 没有该文章在数据库中，则跳过
 
@@ -215,10 +215,10 @@ def user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_tagmap
                         a_tag_key]
         # 保存用户信息
         try:
-            DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
+            dao_utils.mongo_insert_user(inst_user, is_overwrite=True)
             reaction.is_checked = True
-            DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
-        except DAO_utils.DAOException, de:
+            dao_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
+        except dao_utils.DAOException, de:
             print de
             continue  # 更新信息失败则跳过，这样该条reaction将不会被标注为checked
             # TODO（隐患：是否会出现长期遗留的问题reaction？）
@@ -241,12 +241,12 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight=
     reaction_type = 'read'
     # TODO validate admin_id first
     try:
-        inst_user = DAO_utils.mongo_get_user(user_id, admin_id)
-    except DAO_utils.DAOException, de:
+        inst_user = dao_utils.mongo_get_user(user_id, admin_id)
+    except dao_utils.DAOException, de:
         print de
         # 数据库中不存在该用户，则新建一个
         inst_user = WechatUser(user_id=user_id, admin_id=admin_id)
-        DAO_utils.mongo_insert_user(inst_user)
+        dao_utils.mongo_insert_user(inst_user)
     user_atag_vec = inst_user.user_atag_vec
     user_tag_score_vec = inst_user.user_tag_score_vec
     if not reaction_type_weight:
@@ -257,21 +257,21 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight=
         }
     weight = reaction_type_weight[reaction_type]
     try:
-        article = DAO_utils.mongo_get_article(a_id, article_db=DAO_utils.wnews_db)
+        article = dao_utils.mongo_get_article(a_id, article_db=dao_utils.wnews_db)
         for a_tag_item in article.a_tags:  # 文章的tags应该是一个dict
             a_tag_key = a_tag_item.get('tag')
             if a_tag_key in user_atag_vec:
                 user_atag_vec[a_tag_key] += weight * a_tag_item.get('prob')
             else:
                 user_atag_vec[a_tag_key] = weight * a_tag_item.get('prob')
-    except DAO_utils.DAOException, de:
+    except dao_utils.DAOException, de:
         print de
         return {'code': 1, 'msg': 'error, details=%s' % de}
         # continue  # 没有该文章在数据库中，则跳过
 
     # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
     # TODO 更好的权值赋值公式
-    admin_taglist = DAO_utils.mongo_get_all_taglist(admin_id)
+    admin_taglist = dao_utils.mongo_get_all_taglist(admin_id)
     admin_tagset = set(admin_taglist)
     for a_tag_key in user_atag_vec.keys():
         if a_u_tagmap:  # 如果有article-user-tagmap则进行映射
@@ -289,13 +289,13 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight=
             for u_tag_key in user_atag_vec:
                 admin_tagset.add(u_tag_key)
     # 保存taglist
-    DAO_utils.mongo_update_taglist(admin_id, list(admin_tagset))
+    dao_utils.mongo_update_taglist(admin_id, list(admin_tagset))
     # 保存用户信息
     try:
-        DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
+        dao_utils.mongo_insert_user(inst_user, is_overwrite=True)
         # reaction.is_checked = True
         # DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
-    except DAO_utils.DAOException, de:
+    except dao_utils.DAOException, de:
         print de
         return {'code': 1, 'msg': 'error, update user info failed, details=%s' % de}
 
@@ -321,12 +321,12 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
     # a_id = article_id
     reaction_type = 'read'
     try:
-        inst_user = DAO_utils.mongo_get_user(user_id, admin_id)
-    except DAO_utils.DAOException, de:
+        inst_user = dao_utils.mongo_get_user(user_id, admin_id)
+    except dao_utils.DAOException, de:
         print de
         # 数据库中不存在该用户，则新建一个
         inst_user = WechatUser(user_id=user_id, admin_id=admin_id)
-        DAO_utils.mongo_insert_user(inst_user)
+        dao_utils.mongo_insert_user(inst_user)
 
     user_atag_vec = inst_user.user_atag_vec
     user_tag_score_vec = inst_user.user_tag_score_vec
@@ -342,14 +342,14 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
                 user_atag_vec[a_tag_key] += weight * a_tag['conf']
             else:
                 user_atag_vec[a_tag_key] = weight * a_tag['conf']
-    except DAO_utils.DAOException, de:
+    except dao_utils.DAOException, de:
         print de
         return {'code': 1, 'msg': 'error, details=%s' % de}
         # continue  # 没有该文章在数据库中，则跳过
 
     # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
     # TODO 更好的权值赋值公式
-    admin_taglist = DAO_utils.mongo_get_all_taglist(admin_id)
+    admin_taglist = dao_utils.mongo_get_all_taglist(admin_id)
     admin_tagset = set(admin_taglist)
     for a_tag_key in user_atag_vec.keys():
         if a_u_tagmap:  # 如果有article-user-tagmap则进行映射
@@ -367,13 +367,13 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
             for u_tag_key in user_atag_vec:
                 admin_tagset.add(u_tag_key)
     # 保存taglist
-    DAO_utils.mongo_update_taglist(admin_id, list(admin_tagset))
+    dao_utils.mongo_update_taglist(admin_id, list(admin_tagset))
     # 保存用户信息
     try:
-        DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
+        dao_utils.mongo_insert_user(inst_user, is_overwrite=True)
         # reaction.is_checked = True
         # DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
-    except DAO_utils.DAOException, de:
+    except dao_utils.DAOException, de:
         print de
         return {'code': 1, 'msg': 'error, update user info failed, details=%s' % de}
 
