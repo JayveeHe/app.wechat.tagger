@@ -115,6 +115,7 @@ wnews_db = wechat_analysis_collection.get_collection('webpage_weixin_news')
 u_db = wechat_analysis_collection['Users']
 re_db = wechat_analysis_collection['Reactions']
 conf_db = wechat_analysis_collection['Configs']
+fans_db = wechat_analysis_collection['webpage_fans']
 
 
 # todo add logging system
@@ -284,7 +285,7 @@ def mongo_set_conf(config_name, config_value, config_db=conf_db, is_overwrite=Fa
     return 0
 
 
-def mongo_get_openid_by_tags(admin_id, tags, user_db=u_db):
+def mongo_get_openid_by_tags(admin_id, tags, user_db=u_db, fan_db=fans_db):
     openid_list = set()
     conditions = []
     for tag in tags:
@@ -295,7 +296,9 @@ def mongo_get_openid_by_tags(admin_id, tags, user_db=u_db):
     if tags:
         find_result = u_db.find(find_filter)
         for item in find_result:
-            openid_list.add(item['user_id'])
+            mongo_userid = item['user_id']
+            fan_item = fan_db.find_one({"_id": ObjectId(mongo_userid)})
+            openid_list.add(fan_item['openid'])
     return list(openid_list)
 
 
@@ -316,5 +319,5 @@ def mongo_update_taglist(admin_id, taglist, config_db=conf_db):
 
 
 if __name__ == '__main__':
-    print mongo_get_openid_by_tags([u'军事新闻', u'军事历史'])
-    print mongo_get_all_taglist()
+    print mongo_get_openid_by_tags("565d46d9db8f1cf930b8db78", [u"军事"])
+    # print mongo_get_all_taglist()

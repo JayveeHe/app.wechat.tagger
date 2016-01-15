@@ -5,7 +5,6 @@ import gensim
 import requests
 import jieba.posseg as pseg
 import sys
-import dao_utils
 from tencent_qcloud_classifier import wenzhi_utils
 from wechat_analyzer.basic_class.WechatUser import WechatUser
 
@@ -16,6 +15,7 @@ __author__ = 'jayvee'
 
 apath = os.path.dirname(__file__)
 sys.path.append(apath)
+import dao_utils
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
