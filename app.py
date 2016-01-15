@@ -315,7 +315,7 @@ def get_all_taglist(admin_id):
         tag_user_num_dict = {}
         for tag in taglist:
             tag_user_num = DAO_utils.mongo_get_openid_by_tags(admin_id=admin_id, tags=[tag])
-            tag_user_num_dict[tag] = tag_user_num
+            tag_user_num_dict[tag] = len(tag_user_num)
         return json.dumps({'code': 0, 'tagList': taglist, 'tagUserNum': tag_user_num_dict}, ensure_ascii=False)
 
     except Exception, e:
