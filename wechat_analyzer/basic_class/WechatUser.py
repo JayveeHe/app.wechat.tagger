@@ -29,5 +29,6 @@ class WechatUser:
             self.user_atag_vec = user_atag_vec  # 用户的文章tag交互向量
             self.user_tag_score_vec = user_tag_score_vec
             self.admin_id = admin_id
+            self.most_tags = {}
         else:
             raise TypeError

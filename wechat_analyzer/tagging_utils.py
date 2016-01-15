@@ -16,6 +16,7 @@ __author__ = 'jayvee'
 apath = os.path.dirname(__file__)
 sys.path.append(apath)
 import DAO_utils
+
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
@@ -215,6 +216,15 @@ def user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_tagmap
                         a_tag_key]
         # 保存用户信息
         try:
+            # 重新计算用户最大的3个tag
+            tmp_list = []
+            for user_tag_key in inst_user.user_tag_score_vec:
+                tmp_list.append((user_tag_key, inst_user.user_tag_score_vec[user_tag_key]))
+            ranked_list = sorted(tmp_list, cmp=lambda x, y: -cmp(x[1], y[1]))
+            most_tags = {}
+            for r_item in ranked_list[:3]:
+                most_tags[r_item[0]] = r_item[1]
+            inst_user.most_tags = most_tags
             DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
             reaction.is_checked = True
             DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
@@ -292,6 +302,15 @@ def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight=
     DAO_utils.mongo_update_taglist(admin_id, list(admin_tagset))
     # 保存用户信息
     try:
+        # 重新计算用户最大的3个tag
+        tmp_list = []
+        for user_tag_key in inst_user.user_tag_score_vec:
+            tmp_list.append((user_tag_key, inst_user.user_tag_score_vec[user_tag_key]))
+        ranked_list = sorted(tmp_list, cmp=lambda x, y: -cmp(x[1], y[1]))
+        most_tags = {}
+        for r_item in ranked_list[:3]:
+            most_tags[r_item[0]] = r_item[1]
+        inst_user.most_tags = most_tags
         DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
         # reaction.is_checked = True
         # DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
@@ -370,6 +389,15 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
     DAO_utils.mongo_update_taglist(admin_id, list(admin_tagset))
     # 保存用户信息
     try:
+        # 重新计算用户最大的3个tag
+        tmp_list = []
+        for user_tag_key in inst_user.user_tag_score_vec:
+            tmp_list.append((user_tag_key, inst_user.user_tag_score_vec[user_tag_key]))
+        ranked_list = sorted(tmp_list, cmp=lambda x, y: -cmp(x[1], y[1]))
+        most_tags = {}
+        for r_item in ranked_list[:3]:
+            most_tags[r_item[0]] = r_item[1]
+        inst_user.most_tags = most_tags
         DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
         # reaction.is_checked = True
         # DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
@@ -387,4 +415,4 @@ def user_tagging_by_url(article_url, user_id, admin_id, reaction_type_weight, a_
 
 
 if __name__ == '__main__':
-    print user_tagging_by_article('565e6511e025b1b47c626c74', '565ff6f1996597c15c75fd8f', '565bc94ca71ecdb71b8fbe95')
+    print user_tagging_by_article('56962dcdcd66e3c4643a48a5', '56618dfef8d64e961e94d83c', '565bc94fa71ecdb71b8fbe96')

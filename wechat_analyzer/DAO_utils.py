@@ -169,7 +169,8 @@ def mongo_insert_user(inst_user, user_db=u_db, is_overwrite=False):
     :return:
     """
     user = {'user_id': inst_user.user_id, 'user_name': inst_user.user_name, 'article_vec': inst_user.user_atag_vec,
-            'user_tag_vec': inst_user.user_tag_score_vec, 'admin_id': inst_user.admin_id}
+            'user_tag_vec': inst_user.user_tag_score_vec, 'admin_id': inst_user.admin_id,
+            'most_tags': inst_user.most_tags}
     if not user_db.find_one({'user_id': inst_user.user_id, 'admin_id': inst_user.admin_id}):
         user_db.insert(user)
     elif is_overwrite:
@@ -289,7 +290,7 @@ def mongo_get_openid_by_tags(admin_id, tags, user_db=u_db, fan_db=fans_db):
     openid_list = set()
     conditions = []
     for tag in tags:
-        conditions.append('user_tag_vec.%s' % tag)
+        conditions.append('most_tags.%s' % tag)
     find_filter = {'admin_id': admin_id}
     for condition in conditions:
         find_filter[condition] = {'$exists': True}
@@ -319,5 +320,6 @@ def mongo_update_taglist(admin_id, taglist, config_db=conf_db):
 
 
 if __name__ == '__main__':
-    print mongo_get_openid_by_tags("565d46d9db8f1cf930b8db78", [u"军事"])
-    print mongo_get_all_taglist("565d46d9db8f1cf930b8db78")
+    print mongo_get_openid_by_tags("565bc94fa71ecdb71b8fbe96", [u"科技"])
+    for i in mongo_get_all_taglist("565bc94fa71ecdb71b8fbe96"):
+        print i
