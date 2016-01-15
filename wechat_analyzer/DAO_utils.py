@@ -320,4 +320,4 @@ def mongo_update_taglist(admin_id, taglist, config_db=conf_db):
 
 if __name__ == '__main__':
     print mongo_get_openid_by_tags("565d46d9db8f1cf930b8db78", [u"军事"])
-    # print mongo_get_all_taglist()
+    print mongo_get_all_taglist("565d46d9db8f1cf930b8db78")

@@ -17,7 +17,7 @@ from sklearn.externals import joblib
 
 from passage_classifier.vector_builder import VectorBuilder
 from tencent_qcloud_classifier import wenzhi_utils
-from wechat_analyzer import tagging_utils, dao_utils
+from wechat_analyzer import tagging_utils, DAO_utils
 from wechat_analyzer.content_extractor import Extractor
 from wechat_analyzer.web_content_extractor import get_content
 
@@ -169,7 +169,7 @@ def record_reactions():
         media_id = request.args['media_id']
         thumb_id = request.args['thumb_id']
         article_id = hashlib.md5(media_id + thumb_id).hexdigest()
-        article = dao_utils.mongo_get_article(article_id)
+        article = DAO_utils.mongo_get_article(article_id)
         redirect_url = article.a_url
         # if code:
         #     token_url = 'https://api.weixin.qq.com/sns/oauth2/access_token'
@@ -181,7 +181,7 @@ def record_reactions():
                             reaction_user_id=user_id,
                             reaction_date=datetime.datetime.utcnow())
         # todo db连接是否需要长期保持?
-        dao_utils.mongo_insert_reactions(reaction)
+        DAO_utils.mongo_insert_reactions(reaction)
         # else:
         #     print 'user did not agree to auth'
         return redirect(redirect_url)
@@ -216,14 +216,14 @@ def post_article():
                 atags[topic['topic_tag']] = topic['topic_prob']
             article = Article(a_id=article_id, a_title=article_title, post_user=article_post_user,
                               post_date=article_post_date, a_tags=atags, a_url=article_url, a_content=article_content)
-            dao_utils.mongo_insert_article(article)
+            DAO_utils.mongo_insert_article(article)
         resp = make_response(json.dumps({'code': 0, 'msg': 'success'}), 200)
     except KeyError, ke:
         print ke
         resp = make_response(
             json.dumps({'code': 103,
                         'msg': 'request key error, details=%s' % str(ke)}), 500)
-    except dao_utils.DAOException, de:
+    except DAO_utils.DAOException, de:
         print de
         resp = make_response(json.dumps({'code': 0, 'msg': 'success,article already existed'}), 200)
     except Exception, e:
@@ -241,7 +241,7 @@ def get_article(article_id):
     try:
         # params = request.args
         # article_id = params['article_id']
-        inst_article = dao_utils.mongo_get_article(article_id)
+        inst_article = DAO_utils.mongo_get_article(article_id)
         json_article = inst_article.get_json_object()
         resp = make_response(json.dumps({'code': 0, 'article': json_article}), 200)
     except KeyError, ke:
@@ -265,7 +265,7 @@ def new_user():
         jdata = json.loads(request.data)
         user_id = jdata['openid']
         wechat_user = WechatUser(user_id)
-        dao_utils.mongo_insert_user(wechat_user)
+        DAO_utils.mongo_insert_user(wechat_user)
         resp = make_response(json.dumps({'code': 0, 'msg': 'success'}), 200)
     except KeyError, ke:
         print ke
@@ -285,9 +285,9 @@ def start_user_tagging():
     :return:
     """
     try:
-        reaction_list = dao_utils.mongo_get_reactions()
-        reaction_type_weight = dao_utils.mongo_get_reaction_type_weight()
-        a_u_map = dao_utils.mongo_get_a_u_tagmap()
+        reaction_list = DAO_utils.mongo_get_reactions()
+        reaction_type_weight = DAO_utils.mongo_get_reaction_type_weight()
+        a_u_map = DAO_utils.mongo_get_a_u_tagmap()
         count = tagging_utils.user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_map)
         return json.dumps({'code': 0, 'msg': 'handled %s reactions' % count})
     except Exception, e:
@@ -300,7 +300,7 @@ def get_openidlist_by_tag():
         req_data = json.loads(request.data)
         taglist = req_data['tagList']
         admin_id = req_data['admin_id']
-        openid_list = dao_utils.mongo_get_openid_by_tags(admin_id, taglist)
+        openid_list = DAO_utils.mongo_get_openid_by_tags(admin_id, taglist)
         return json.dumps({'code': 0, 'openid_list': openid_list})
     except Exception, e:
         print e
@@ -310,7 +310,7 @@ def get_openidlist_by_tag():
 @app.route('/api/v1/taglist/<admin_id>', methods=['GET'])
 def get_all_taglist(admin_id):
     try:
-        taglist = dao_utils.mongo_get_all_taglist(admin_id)
+        taglist = DAO_utils.mongo_get_all_taglist(admin_id)
         return json.dumps({'code': 0, 'tagList': taglist}, ensure_ascii=False)
 
     except Exception, e:
@@ -375,7 +375,7 @@ def tagging_by_article():
         user_id = req_data['user_id']
         admin_id = req_data['admin_id']
         article_id = req_data['article_id']
-        reaction_type_weight = dao_utils.mongo_get_reaction_type_weight()
+        reaction_type_weight = DAO_utils.mongo_get_reaction_type_weight()
 
         result = tagging_utils.user_tagging_by_article(article_id=article_id, admin_id=admin_id, user_id=user_id,
                                                        reaction_type_weight=reaction_type_weight)
@@ -393,7 +393,7 @@ def tagging_by_url():
         user_id = req_data['user_id']
         admin_id = req_data['admin_id']
         article_url = req_data['article_url']
-        reaction_type_weight = dao_utils.mongo_get_reaction_type_weight()
+        reaction_type_weight = DAO_utils.mongo_get_reaction_type_weight()
 
         result = tagging_utils.user_tagging_by_url(article_url=article_url, admin_id=admin_id, user_id=user_id,
                                                    reaction_type_weight=reaction_type_weight)

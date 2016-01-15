@@ -15,7 +15,7 @@ from tencent_qcloud_classifier import wenzhi_utils
 from wechat_analyzer import tagging_utils
 import wechat_analyzer
 from wechat_analyzer.tagging_utils import passage_first_level_classify, passage_second_level_classify
-import wechat_analyzer.dao_utils
+import wechat_analyzer.DAO_utils
 from  wechat_analyzer.basic_class import Article, Reaction, WechatUser
 import requests
 import sys
@@ -197,7 +197,7 @@ def tag_article_and_save(root_path):
                         a_tags[topic['topic_tag']] = topic['topic_prob']
                     a_id = hashlib.md5(post_title + fjson['post_date']).hexdigest()
                     article = Article.Article(a_id, post_title, post_user, a_tags, content, post_date)
-                    wechat_analyzer.dao_utils.mongo_insert_article(article)
+                    wechat_analyzer.DAO_utils.mongo_insert_article(article)
 
 
 def process_weixinpage_data(fin_root="/alidata/weichat_article_data/splits/",
