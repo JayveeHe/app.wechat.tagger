@@ -131,110 +131,110 @@ def passage_second_level_classify(content):
                  'topic_prob': k[1]})
     return topic_list
 
+#
+# def user_tagging(inst_user, reaction_list, reaction_type_weight, a_u_tagmap):
+#     """
+#         根据用户一段时间的交互记录，更新用户的u_tag分数
+#         :param reaction_list:user_id等于当前用户id的一段时间内的交互记录
+#         :param a_u_tagmap:
+#         :return:
+#         """
+#     user_atag_vec = inst_user.user_atag_vec
+#     user_tag_score_vec = inst_user.user_tag_score_vec
+#
+#     for reaction in reaction_list:
+#         weight = reaction_type_weight[reaction.reaction_type]
+#         a_id = reaction.reaction_a_id
+#         # todo a_map just for demo
+#         article = DAO_utils.get_article_by_id(a_id)
+#         for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
+#             if a_tag_key in user_atag_vec:
+#                 user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
+#             else:
+#                 user_atag_vec[a_tag_key] = weight * article.a_tags[a_tag_key]
+#
+#
+#     # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
+#     # TODO 更好的权值赋值公式
+#     for a_tag_key in user_atag_vec.keys():
+#         for u_tag_key in a_u_tagmap[a_tag_key]:
+#             if u_tag_key in user_tag_score_vec:  # TODO 是否需要每次都加？
+#                 user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
+#                     a_tag_key]
+#             else:
+#                 user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
+#                     a_tag_key]
+#     return user_tag_score_vec
 
-def user_tagging(inst_user, reaction_list, reaction_type_weight, a_u_tagmap):
-    """
-        根据用户一段时间的交互记录，更新用户的u_tag分数
-        :param reaction_list:user_id等于当前用户id的一段时间内的交互记录
-        :param a_u_tagmap:
-        :return:
-        """
-    user_atag_vec = inst_user.user_atag_vec
-    user_tag_score_vec = inst_user.user_tag_score_vec
-
-    for reaction in reaction_list:
-        weight = reaction_type_weight[reaction.reaction_type]
-        a_id = reaction.reaction_a_id
-        # todo a_map just for demo
-        article = DAO_utils.get_article_by_id(a_id)
-        for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
-            if a_tag_key in user_atag_vec:
-                user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
-            else:
-                user_atag_vec[a_tag_key] = weight * article.a_tags[a_tag_key]
-
-
-    # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
-    # TODO 更好的权值赋值公式
-    for a_tag_key in user_atag_vec.keys():
-        for u_tag_key in a_u_tagmap[a_tag_key]:
-            if u_tag_key in user_tag_score_vec:  # TODO 是否需要每次都加？
-                user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
-                    a_tag_key]
-            else:
-                user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
-                    a_tag_key]
-    return user_tag_score_vec
-
-
-def user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_tagmap):
-    """
-    根据交互记录列表来给用户打tags
-    :param reaction_list:
-    :param reaction_type_weight:
-    :param a_u_tagmap:
-    :return:
-    """
-    process_count = 0
-    for reaction in reaction_list:
-        # reaction_id = reaction.reaction_id
-        user_id = reaction.reaction_user_id
-        a_id = reaction.reaction_a_id
-        reaction_type = reaction.reaction_type
-        try:
-            inst_user = DAO_utils.mongo_get_user(user_id)
-        except DAO_utils.DAOException, de:
-            print de
-            # 数据库中不存在该用户，则新建一个
-            inst_user = WechatUser(user_id=user_id)
-            DAO_utils.mongo_insert_user(inst_user)
-
-        user_atag_vec = inst_user.user_atag_vec
-        user_tag_score_vec = inst_user.user_tag_score_vec
-
-        weight = reaction_type_weight[reaction_type]
-        try:
-            article = DAO_utils.mongo_get_article(a_id)
-            for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
-                if a_tag_key in user_atag_vec:
-                    user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
-                else:
-                    user_atag_vec[a_tag_key] = weight * article.a_tags[a_tag_key]
-        except DAO_utils.DAOException, de:
-            print de
-            continue  # 没有该文章在数据库中，则跳过
-
-        # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
-        # TODO 更好的权值赋值公式
-        for a_tag_key in user_atag_vec.keys():
-            for u_tag_key in a_u_tagmap[a_tag_key]:
-                if u_tag_key in user_tag_score_vec:  # TODO 是否需要每次都加？
-                    user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
-                        a_tag_key]
-                else:
-                    user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
-                        a_tag_key]
-        # 保存用户信息
-        try:
-            # 重新计算用户最大的3个tag
-            tmp_list = []
-            for user_tag_key in inst_user.user_tag_score_vec:
-                tmp_list.append((user_tag_key, inst_user.user_tag_score_vec[user_tag_key]))
-            ranked_list = sorted(tmp_list, cmp=lambda x, y: -cmp(x[1], y[1]))
-            most_tags = {}
-            for r_item in ranked_list[:3]:
-                most_tags[r_item[0]] = r_item[1]
-            inst_user.most_tags = most_tags
-            DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
-            reaction.is_checked = True
-            DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
-        except DAO_utils.DAOException, de:
-            print de
-            continue  # 更新信息失败则跳过，这样该条reaction将不会被标注为checked
-            # TODO（隐患：是否会出现长期遗留的问题reaction？）
-
-        process_count += 1
-    return process_count
+#
+# def user_tagging_by_reactionlist(reaction_list, reaction_type_weight, a_u_tagmap):
+#     """
+#     根据交互记录列表来给用户打tags
+#     :param reaction_list:
+#     :param reaction_type_weight:
+#     :param a_u_tagmap:
+#     :return:
+#     """
+#     process_count = 0
+#     for reaction in reaction_list:
+#         # reaction_id = reaction.reaction_id
+#         user_id = reaction.reaction_user_id
+#         a_id = reaction.reaction_a_id
+#         reaction_type = reaction.reaction_type
+#         try:
+#             inst_user = DAO_utils.mongo_get_user(user_id)
+#         except DAO_utils.DAOException, de:
+#             print de
+#             # 数据库中不存在该用户，则新建一个
+#             inst_user = WechatUser(user_id=user_id)
+#             DAO_utils.mongo_insert_user(inst_user)
+#
+#         user_atag_vec = inst_user.user_atag_vec
+#         user_tag_score_vec = inst_user.user_tag_score_vec
+#
+#         weight = reaction_type_weight[reaction_type]
+#         try:
+#             article = DAO_utils.mongo_get_article(a_id)
+#             for a_tag_key in article.a_tags:  # 文章的tags应该是一个dict
+#                 if a_tag_key in user_atag_vec:
+#                     user_atag_vec[a_tag_key] += weight * article.a_tags[a_tag_key]
+#                 else:
+#                     user_atag_vec[a_tag_key] = weight * article.a_tags[a_tag_key]
+#         except DAO_utils.DAOException, de:
+#             print de
+#             continue  # 没有该文章在数据库中，则跳过
+#
+#         # 用户的atag_vec处理完毕，开始处理user_tag_score_vec
+#         # TODO 更好的权值赋值公式
+#         for a_tag_key in user_atag_vec.keys():
+#             for u_tag_key in a_u_tagmap[a_tag_key]:
+#                 if u_tag_key in user_tag_score_vec:  # TODO 是否需要每次都加？
+#                     user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
+#                         a_tag_key]
+#                 else:
+#                     user_tag_score_vec[u_tag_key] = a_u_tagmap[a_tag_key][u_tag_key] * user_atag_vec[
+#                         a_tag_key]
+#         # 保存用户信息
+#         try:
+#             # 重新计算用户最大的3个tag
+#             tmp_list = []
+#             for user_tag_key in inst_user.user_tag_score_vec:
+#                 tmp_list.append((user_tag_key, inst_user.user_tag_score_vec[user_tag_key]))
+#             ranked_list = sorted(tmp_list, cmp=lambda x, y: -cmp(x[1], y[1]))
+#             most_tags = {}
+#             for r_item in ranked_list[:3]:
+#                 most_tags[r_item[0]] = r_item[1]
+#             inst_user.most_tags = most_tags
+#             DAO_utils.mongo_insert_user(inst_user, is_overwrite=True)
+#             reaction.is_checked = True
+#             DAO_utils.mongo_insert_reactions(reaction, is_overwrite=True)  # 标注该条交互记录
+#         except DAO_utils.DAOException, de:
+#             print de
+#             continue  # 更新信息失败则跳过，这样该条reaction将不会被标注为checked
+#             # TODO（隐患：是否会出现长期遗留的问题reaction？）
+#
+#         process_count += 1
+#     return process_count
 
 
 def user_tagging_by_article(article_id, user_id, admin_id, reaction_type_weight=None, a_u_tagmap=None):
