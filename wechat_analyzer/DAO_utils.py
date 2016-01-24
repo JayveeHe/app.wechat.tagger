@@ -292,8 +292,11 @@ def mongo_get_openid_by_tags(admin_id, tags, user_db=u_db, fan_db=fans_db):
     for tag in tags:
         conditions.append('most_tags.%s' % tag)
     find_filter = {'admin_id': admin_id}
+    tags_conditions = []
     for condition in conditions:
-        find_filter[condition] = {'$exists': True}
+        tags_conditions.append({condition: {'$exists': True}})
+    if len(tags_conditions) > 0:
+        find_filter['$or'] = tags_conditions
     if tags:
         find_result = u_db.find(find_filter)
         for item in find_result:
